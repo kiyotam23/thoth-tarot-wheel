@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thoth Tarot — Zodiacal Wheel</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -174,7 +174,7 @@ body {
 .card-name {
   font-size: 26px;
   font-style: italic;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.1;
   color: var(--gold-bright);
 }
@@ -485,6 +485,15 @@ body {
   margin-top: 4px;
   border-color: var(--gold-dim);
 }
+.rotate-group-label {
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  margin-top: 4px;
+}
 </style>
 <template id="__bundler_thumbnail" data-bg-color="#0a0710">
   <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -514,7 +523,7 @@ body {
 const { useState, useMemo, useEffect, useRef } = React;
 
 // ── CONSTANTS ──────────────────────────────────────────
-const CX = 430, CY = 430;
+const CX = 0, CY = 0;
 
 // ── DATA ───────────────────────────────────────────────
 const SIGNS = [
@@ -658,11 +667,15 @@ function arc(ri, ro, a1, a2) {
   return `M${x1},${y1} A${ro},${ro},0,${lg},1,${x2},${y2} L${x3},${y3} A${ri},${ri},0,${lg},0,${x4},${y4} Z`;
 }
 
+function minorLikeTextRotation(angleDeg) {
+  return angleDeg - 180;
+}
+
 // ── STARS ──────────────────────────────────────────────
 const STARS = (() => {
   let s = 42;
   const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
-  return Array.from({length:150}, () => ({ x: rnd()*860, y: rnd()*860, r: rnd()*1.1+0.2, o: rnd()*0.35+0.08 }));
+  return Array.from({length:150}, () => ({ x: rnd()*860 - 430, y: rnd()*860 - 430, r: rnd()*1.1+0.2, o: rnd()*0.35+0.08 }));
 })();
 
 // ── SVG DEFS ───────────────────────────────────────────
@@ -705,11 +718,11 @@ function ZodiacRing({ active, onHover, onClick }) {
         const a1 = i*30, a2 = a1+30, mid = a1+15;
         const ec = EC[sg.element];
         const isHov = active?.id === majorCard.id;
-        const flip = mid > 90 && mid <= 270;
+        const rot = minorLikeTextRotation(mid);
+        const majorInlineLabel = `${majorCard.roman} - ${majorCard.short.toUpperCase()}`;
         // three concentric positions inside the zodiac cell
         const [symX, symY] = polar((RZO + RZI) / 2 + 10, mid); // symbol — upper area
-        const [romX, romY] = polar((RZO + RZI) / 2 - 8, mid);  // roman numeral — middle
-        const [nameX, nameY] = polar(RZI + 6, mid);             // card name — inner edge
+        const [nameX, nameY] = polar((RZO + RZI) / 2 - 8, mid); // inline major label
         return (
           <g key={i} style={{cursor:'pointer'}}
             onMouseEnter={() => onHover({...majorCard, type:'major-zodiac', signInfo: sg})}
@@ -730,33 +743,21 @@ function ZodiacRing({ active, onHover, onClick }) {
               fontFamily="'Inter', sans-serif"
               fontWeight="500"
               filter={isHov ? 'url(#glow2)' : undefined}
-              transform={`rotate(${flip?mid+180:mid},${symX},${symY})`}
+              transform={`rotate(${rot},${symX},${symY})`}
               style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s', fontVariantEmoji:'text'}}>
               {sg.symbol}
             </text>
-            {/* roman numeral */}
-            <text
-              x={romX} y={romY}
-              textAnchor="middle" dominantBaseline="middle"
-              fontSize="11" fill={ec.accent} opacity="1"
-              fontFamily="'Inter', sans-serif"
-              fontWeight="500"
-              letterSpacing="1"
-              transform={`rotate(${flip?mid+180:mid},${romX},${romY})`}
-              style={{userSelect:'none', pointerEvents:'none'}}>
-              {majorCard.roman}
-            </text>
-            {/* card name */}
+            {/* inline major label: e.g. XI LUST */}
             <text
               x={nameX} y={nameY}
               textAnchor="middle" dominantBaseline="middle"
-              fontSize="11" fill={isHov ? ec.text : ec.accent} opacity="1"
+              fontSize="10.5" fill={isHov ? ec.text : ec.accent} opacity="1"
               fontFamily="'Inter', sans-serif"
-              fontStyle="italic"
               fontWeight="500"
-              transform={`rotate(${flip?mid+180:mid},${nameX},${nameY})`}
+              letterSpacing="0.6"
+              transform={`rotate(${rot},${nameX},${nameY})`}
               style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s'}}>
-              {majorCard.short}
+              {majorInlineLabel}
             </text>
             {/* divider */}
             {(() => { const [dx1,dy1]=polar(RZI,a1),[dx2,dy2]=polar(RZO,a1);
@@ -782,8 +783,7 @@ function DecanRing({ active, onHover, onClick }) {
         const mid = a1 + 5;
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const flip = mid > 90 && mid <= 270;
-        const rot = flip ? mid + 180 : mid;
+        const rot = minorLikeTextRotation(mid);
 
         // Text positions
         const [px, py] = polar((RDO+RDI)/2 + 28, mid);
@@ -844,38 +844,100 @@ function DecanRing({ active, onHover, onClick }) {
 }
 
 // ── MARKER ────────────────────────────────────────────
-function Marker({ x, y, r, roman, label, color, active, onHover, onClick, id, glyph }) {
+function Marker({ x, y, r, roman, label, color, active, onHover, onClick, id, glyph, textRotation = 0, inlineMajorLabel = false }) {
   const [hov, setHov] = useState(false);
   const on = hov || active;
+  const hasLabel = Boolean(label);
+  const hasGlyph = Boolean(glyph);
+  const hasRoman = Boolean(roman);
+  const labelSize = label && label.length > 12 ? 8 : (r >= 24 ? 9 : 8.5);
+  const topY = y - (r * 0.58);
+  const midY = y - (r * 0.04);
+  const bottomY = y + (r * 0.52);
+  const glyphY = hasLabel ? y - (r * 0.18) : y - (r * 0.03);
+  const labelY = hasLabel ? y + (r * 0.38) : y + (r * 0.22);
+  const isPlanetaryThreeLine = hasLabel && hasGlyph && hasRoman && !inlineMajorLabel;
+  const inlineLabelText = hasRoman && hasLabel ? `${roman} - ${label.toUpperCase()}` : (label || '');
   return (
     <g style={{cursor:'pointer'}}
       onMouseEnter={() => { setHov(true); onHover(); }}
       onMouseLeave={() => { setHov(false); onHover(null); }}
       onClick={onClick}>
+      <circle
+        cx={x}
+        cy={y}
+        r={r + 6}
+        fill="transparent"
+        style={{pointerEvents:'all'}}
+      />
       {on && <circle cx={x} cy={y} r={r+5} fill={color} opacity="0.15" filter="url(#glow3)"/>}
-      <circle cx={x} cy={y} r={r}
-        fill={on ? `${color}22` : 'rgba(10,7,16,0.85)'}
-        stroke={on ? color : 'rgba(201,169,97,0.4)'}
-        strokeWidth={on ? 1.2 : 0.7}
-        filter={on ? 'url(#glow2)' : undefined}
-        style={{transition:'all 0.25s'}}/>
-      <text x={x} y={y - 5} textAnchor="middle" dominantBaseline="middle"
-        fontSize={r >= 24 ? 14 : r >= 20 ? 12 : 11} fontFamily="'Inter', sans-serif"
-        fontWeight="600"
-        fill={on ? color : 'rgba(201,169,97,0.95)'}
-        filter={on ? 'url(#glow2)' : undefined}
-        style={{userSelect:'none', pointerEvents:'none', transition:'all 0.25s'}}>
-        {glyph || roman}
-      </text>
-      {label && (
-        <text x={x} y={y + (r >= 24 ? 10 : r >= 20 ? 9 : 8)} textAnchor="middle" dominantBaseline="middle"
-          fontSize={r >= 24 ? 10 : r >= 20 ? 9.5 : 9} fontFamily="'Inter', sans-serif" fontStyle="italic"
-          fontWeight="500"
-          fill={on ? color : 'rgba(201,169,97,0.85)'}
-          style={{userSelect:'none', pointerEvents:'none', transition:'all 0.25s'}}>
-          {label}
-        </text>
-      )}
+      {/* Planetary black marker circle removed */}
+      <g transform={`rotate(${textRotation},${x},${y})`} style={{pointerEvents:'none'}}>
+        {isPlanetaryThreeLine ? (
+          <>
+            <text x={x} y={topY} textAnchor="middle" dominantBaseline="middle"
+              fontSize={labelSize} fontFamily="'Inter', sans-serif" fontStyle="italic"
+              fontWeight="500"
+              fill={on ? color : 'rgba(201,169,97,0.85)'}
+              style={{userSelect:'none', transition:'all 0.25s'}}>
+              {label}
+            </text>
+            <text x={x} y={midY} textAnchor="middle" dominantBaseline="middle"
+              fontSize={r >= 24 ? 8.5 : 8} fontFamily="'Inter', sans-serif"
+              fontWeight="500"
+              fill={on ? color : 'rgba(201,169,97,0.86)'}
+              style={{userSelect:'none', transition:'all 0.25s'}}>
+              {roman}
+            </text>
+            <text x={x} y={bottomY} textAnchor="middle" dominantBaseline="middle"
+              fontSize={r >= 24 ? 22 : 20} fontFamily="'Inter', sans-serif"
+              fontWeight="600"
+              fill={on ? color : 'rgba(201,169,97,0.95)'}
+              filter={on ? 'url(#glow2)' : undefined}
+              style={{userSelect:'none', transition:'all 0.25s'}}>
+              {glyph}
+            </text>
+          </>
+        ) : inlineMajorLabel ? (
+          <>
+            <text x={x} y={y - (r * 0.08)} textAnchor="middle" dominantBaseline="middle"
+              fontSize={labelSize} fontFamily="'Inter', sans-serif" fontStyle="italic"
+              fontWeight="500"
+              fill={on ? color : 'rgba(201,169,97,0.88)'}
+              style={{userSelect:'none', transition:'all 0.25s'}}>
+              {inlineLabelText}
+            </text>
+            <text x={x} y={y + (r * 0.56)} textAnchor="middle" dominantBaseline="middle"
+              fontSize={r >= 24 ? 20 : 18} fontFamily="'Inter', sans-serif"
+              fontWeight="600"
+              fill={on ? color : 'rgba(201,169,97,0.95)'}
+              filter={on ? 'url(#glow2)' : undefined}
+              style={{userSelect:'none', transition:'all 0.25s'}}>
+              {glyph}
+            </text>
+          </>
+        ) : (
+          <>
+            <text x={x} y={glyphY} textAnchor="middle" dominantBaseline="middle"
+              fontSize={r >= 24 ? 14 : r >= 20 ? 12 : 11} fontFamily="'Inter', sans-serif"
+              fontWeight="600"
+              fill={on ? color : 'rgba(201,169,97,0.95)'}
+              filter={on ? 'url(#glow2)' : undefined}
+              style={{userSelect:'none', transition:'all 0.25s'}}>
+              {glyph || roman}
+            </text>
+            {hasLabel && (
+              <text x={x} y={labelY} textAnchor="middle" dominantBaseline="middle"
+                fontSize={labelSize} fontFamily="'Inter', sans-serif" fontStyle="italic"
+                fontWeight="500"
+                fill={on ? color : 'rgba(201,169,97,0.85)'}
+                style={{userSelect:'none', transition:'all 0.25s'}}>
+                {label}
+              </text>
+            )}
+          </>
+        )}
+      </g>
     </g>
   );
 }
@@ -924,13 +986,16 @@ function Heptagram({ active, onHover, onClick }) {
       {lines}
       {MAJ_P.map((card, i) => {
         const [x, y] = pts[i];
+        const angle = i * (360/7);
         return (
-          <Marker key={card.id} x={x} y={y} r={24}
+          <Marker key={card.id} x={x} y={y} r={27}
             roman={card.roman} glyph={card.planet} label={card.short}
             color="#c9a961"
             active={active?.id === card.id}
             onHover={(v) => onHover(v === null ? null : {...card, type:'major-planet'})}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-planet'})}
+            textRotation={minorLikeTextRotation(angle)}
+            inlineMajorLabel
             id={card.id}/>
         );
       })}
@@ -959,13 +1024,16 @@ function ElementalTriangle({ active, onHover, onClick }) {
         strokeWidth="0.7"/>
       {elemOrder.map((card, i) => {
         const [x, y] = pts[i];
+        const angle = triAngles[i];
         return (
-          <Marker key={card.id} x={x} y={y} r={22}
+          <Marker key={card.id} x={x} y={y} r={25}
             roman={card.roman} glyph={card.planet} label={card.short}
             color={elemColors[i]}
             active={active?.id === card.id}
             onHover={(v) => onHover(v === null ? null : {...card, type:'major-elemental', elemColor: elemColors[i]})}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-elemental', elemColor: elemColors[i]})}
+            textRotation={minorLikeTextRotation(angle)}
+            inlineMajorLabel
             id={card.id}/>
         );
       })}
@@ -985,10 +1053,8 @@ function CourtRing({ active, onHover, onClick }) {
         const a2 = card.a2 <= card.a1 ? card.a2 + 360 : card.a2;
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const flip = card.mid > 90 && card.mid <= 270;
-        const rot = flip ? card.mid + 180 : card.mid;
-        const [t1x,t1y] = polar(RKQP_I + 15, card.mid);
-        const [t2x,t2y] = polar(RKQP_I + 6,  card.mid);
+        const rot = minorLikeTextRotation(card.mid);
+        const [tx, ty] = polar(RKQP_I + 11, card.mid);
         return (
           <g key={card.id} style={{cursor:'pointer'}}
             onMouseEnter={() => onHover({...card, type:'court'})}
@@ -1000,21 +1066,13 @@ function CourtRing({ active, onHover, onClick }) {
               strokeWidth={isHov ? '0.9' : '0.4'}
               filter={isHov ? 'url(#glow2)' : undefined}
               style={{transition:'all 0.2s'}}/>
-            <text x={t1x} y={t1y} textAnchor="middle" dominantBaseline="middle"
-              fontSize="8.5" fill={isHov ? sc : sc}
+            <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
+              fontSize="9" fill={isHov ? sc : sc}
               fontFamily="'Inter', sans-serif" fontStyle="italic"
               fontWeight="500"
-              transform={`rotate(${rot},${t1x},${t1y})`}
+              transform={`rotate(${rot},${tx},${ty})`}
               style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
-              {`${card.rank} of`}
-            </text>
-            <text x={t2x} y={t2y} textAnchor="middle" dominantBaseline="middle"
-              fontSize="7" fill={isHov ? sc : `${sc}cc`}
-              fontFamily="'Inter', sans-serif"
-              fontWeight="500"
-              transform={`rotate(${rot},${t2x},${t2y})`}
-              style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
-              {card.suit}
+              {`${card.rank} of ${card.suit}`}
             </text>
           </g>
         );
@@ -1025,8 +1083,7 @@ function CourtRing({ active, onHover, onClick }) {
         const a2 = card.a2 <= card.a1 ? card.a2 + 360 : card.a2;
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const flip = card.mid > 90 && card.mid <= 270;
-        const rot = flip ? card.mid + 180 : card.mid;
+        const rot = minorLikeTextRotation(card.mid);
         const [tx, ty] = polar((RPS_O + RPS_I) / 2, card.mid);
         return (
           <g key={card.id} style={{cursor:'pointer'}}
@@ -1236,11 +1293,17 @@ function InfoPanel({ card, className = '', style, headerSlot = null }) {
     : card.type === 'ace' ? '✦' : '✦';
 
   const displayCardName =
+    (card.type === 'major-zodiac' || card.type === 'major-planet' || card.type === 'major-elemental')
+      ? `${card.roman || card.num} - ${card.name.toUpperCase()}`
+    :
     card.type === 'court' ? `${card.rank} of ${card.suit}` :
     card.type === 'minor' ? `${card.num} of ${card.suit}` :
     card.name;
 
   const displayCardIndex =
+    (card.type === 'major-zodiac' || card.type === 'major-planet' || card.type === 'major-elemental')
+      ? null
+    :
     card.type === 'court' ? card.rank :
     (card.roman || card.num);
 
@@ -1256,7 +1319,7 @@ function InfoPanel({ card, className = '', style, headerSlot = null }) {
 
       {/* Number and name */}
       <div className="card-number-name">
-        <div className="card-roman">{displayCardIndex}</div>
+        {displayCardIndex ? <div className="card-roman">{displayCardIndex}</div> : null}
         <div className="card-name" style={{color: typeColor}}>{displayCardName}</div>
       </div>
 
@@ -1410,17 +1473,15 @@ function App() {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 820px)').matches);
   const [isWheelHiddenMobile, setIsWheelHiddenMobile] = useState(false);
   const [sheetState, setSheetState] = useState('closed'); // closed | peek | full
+  const [zodiacRotation, setZodiacRotation] = useState(0);
+  const [planetaryRotation, setPlanetaryRotation] = useState(0);
   const [sheetDragOffset, setSheetDragOffset] = useState(0);
   const sheetDragRef = useRef({ active: false, startY: 0, stateAtStart: 'closed' });
   const active = selected || hovered;
 
-  // ── Zoom & Pan ────────────────────────────────────────
-  const BASE_VB = { x: -55, y: -55, w: 970, h: 970 };
-  const [vb, setVb] = useState(BASE_VB);
-  const svgRef = useRef(null);
-  const panState = useRef({ active: false, startX: 0, startY: 0, startVb: null });
-
-  const resetView = () => setVb(BASE_VB);
+  // ── Fixed View (no user zoom/pan) ─────────────────────
+  const BASE_VB = { x: 0, y: 0, w: 485, h: 485 };
+  const vb = BASE_VB;
   const closeSheet = () => {
     setSheetState('closed');
     setSheetDragOffset(0);
@@ -1431,163 +1492,6 @@ function App() {
     setSheetDragOffset(0);
   };
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const svg = svgRef.current;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-
-    // macOS trackpad: pinch gesture sets ctrlKey=true; two-finger scroll has ctrlKey=false
-    // Mouse wheel typically has larger deltaY and no ctrlKey — treat as zoom
-    const isPinch = e.ctrlKey;
-    const isTwoFingerScroll = !e.ctrlKey && Math.abs(e.deltaY) < 50 && Math.abs(e.deltaX) < 50;
-
-    if (isTwoFingerScroll) {
-      // PAN: move the viewBox in the opposite direction of the scroll
-      const dx = e.deltaX / rect.width * vb.w;
-      const dy = e.deltaY / rect.height * vb.h;
-      setVb({ x: vb.x + dx, y: vb.y + dy, w: vb.w, h: vb.h });
-      return;
-    }
-
-    // ZOOM (pinch or mouse wheel): zoom toward cursor position
-    const mx = ((e.clientX - rect.left) / rect.width) * vb.w + vb.x;
-    const my = ((e.clientY - rect.top) / rect.height) * vb.h + vb.y;
-    // Pinch zoom is more sensitive (smaller factor), wheel zoom is coarser
-    const factor = isPinch ? 0.02 : 0.18;
-    const zoom = e.deltaY < 0 ? (1 - factor) : (1 + factor);
-    let newW = vb.w * zoom;
-    let newH = vb.h * zoom;
-    const minW = BASE_VB.w * 0.15;
-    const maxW = BASE_VB.w * 1.6;
-    if (newW < minW) { newW = minW; newH = BASE_VB.h * 0.15; }
-    if (newW > maxW) { newW = maxW; newH = BASE_VB.h * 1.6; }
-    const newX = mx - ((e.clientX - rect.left) / rect.width) * newW;
-    const newY = my - ((e.clientY - rect.top) / rect.height) * newH;
-    setVb({ x: newX, y: newY, w: newW, h: newH });
-  };
-
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
-    // Start pan unless clicking directly on an interactive element
-    // (anything inside a <g> with cursor:pointer — cards, markers, wedges)
-    const interactive = e.target.closest('g[style*="cursor"]');
-    if (!interactive) {
-      panState.current = { active: true, startX: e.clientX, startY: e.clientY, startVb: vb };
-      e.preventDefault();
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!panState.current.active) return;
-    const svg = svgRef.current;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const dx = (e.clientX - panState.current.startX) / rect.width * panState.current.startVb.w;
-    const dy = (e.clientY - panState.current.startY) / rect.height * panState.current.startVb.h;
-    setVb({
-      x: panState.current.startVb.x - dx,
-      y: panState.current.startVb.y - dy,
-      w: panState.current.startVb.w,
-      h: panState.current.startVb.h,
-    });
-  };
-
-  const handleMouseUp = () => { panState.current.active = false; };
-
-  // Touch handlers (pinch zoom + drag pan)
-  const touchState = useRef({ mode: null, startDist: 0, startVb: null, startX: 0, startY: 0, center: null });
-
-  const getTouchDist = (t) => {
-    const dx = t[0].clientX - t[1].clientX;
-    const dy = t[0].clientY - t[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  };
-
-  const handleTouchStart = (e) => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    if (e.touches.length === 2) {
-      const rect = svg.getBoundingClientRect();
-      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      touchState.current = {
-        mode: 'pinch',
-        startDist: getTouchDist(e.touches),
-        startVb: vb,
-        center: { x: cx - rect.left, y: cy - rect.top, rectW: rect.width, rectH: rect.height },
-      };
-    } else if (e.touches.length === 1) {
-      const interactive = e.target.closest('g[style*="cursor"]');
-      if (!interactive) {
-        touchState.current = {
-          mode: 'pan',
-          startX: e.touches[0].clientX,
-          startY: e.touches[0].clientY,
-          startVb: vb,
-        };
-      }
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    if (touchState.current.mode === 'pinch' && e.touches.length === 2) {
-      e.preventDefault();
-      const newDist = getTouchDist(e.touches);
-      const scale = touchState.current.startDist / newDist;
-      const sVb = touchState.current.startVb;
-      const c = touchState.current.center;
-      let newW = sVb.w * scale;
-      let newH = sVb.h * scale;
-      const minW = BASE_VB.w * 0.15;
-      const maxW = BASE_VB.w * 1.6;
-      if (newW < minW) { newW = minW; newH = BASE_VB.h * 0.15; }
-      if (newW > maxW) { newW = maxW; newH = BASE_VB.h * 1.6; }
-      const mx = (c.x / c.rectW) * sVb.w + sVb.x;
-      const my = (c.y / c.rectH) * sVb.h + sVb.y;
-      const newX = mx - (c.x / c.rectW) * newW;
-      const newY = my - (c.y / c.rectH) * newH;
-      setVb({ x: newX, y: newY, w: newW, h: newH });
-    } else if (touchState.current.mode === 'pan' && e.touches.length === 1) {
-      e.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      const sVb = touchState.current.startVb;
-      const dx = (e.touches[0].clientX - touchState.current.startX) / rect.width * sVb.w;
-      const dy = (e.touches[0].clientY - touchState.current.startY) / rect.height * sVb.h;
-      setVb({ x: sVb.x - dx, y: sVb.y - dy, w: sVb.w, h: sVb.h });
-    }
-  };
-
-  const handleTouchEnd = () => { touchState.current = { mode: null }; };
-
-  // Attach non-passive wheel listener so preventDefault works
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    const wheelHandler = (e) => handleWheel(e);
-    svg.addEventListener('wheel', wheelHandler, { passive: false });
-    svg.addEventListener('touchstart', handleTouchStart, { passive: false });
-    svg.addEventListener('touchmove', handleTouchMove, { passive: false });
-    svg.addEventListener('touchend', handleTouchEnd);
-    return () => {
-      svg.removeEventListener('wheel', wheelHandler);
-      svg.removeEventListener('touchstart', handleTouchStart);
-      svg.removeEventListener('touchmove', handleTouchMove);
-      svg.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [vb]);
-
-  // Global mouse up to end panning even if released outside svg
-  useEffect(() => {
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
 
   // Register tweaks with host
   useEffect(() => {
@@ -1647,7 +1551,6 @@ function App() {
 
   const handleHover = (card) => {
     if (isMobile) return;
-    if (panState.current.active || touchState.current.mode) return;
     if (!selected) setHovered(card); else setHovered(null);
   };
   const handleClick = (updater) => {
@@ -1721,11 +1624,9 @@ function App() {
       )}
       <div className="wheel-wrap" style={{position:'relative'}}>
         <svg
-          ref={svgRef}
           viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
           className="wheel-svg"
-          style={{overflow:'visible', cursor: panState.current.active ? 'grabbing' : 'grab', touchAction: 'none'}}
-          onMouseDown={handleMouseDown}>
+          style={{overflow:'visible', cursor: 'default'}}>
           <Defs/>
           {/* Invisible pan-catcher background (huge rect) */}
           <rect className="pan-bg" x="-2000" y="-2000" width="4860" height="4860" fill="transparent"/>
@@ -1734,32 +1635,45 @@ function App() {
           </g>
           <circle cx={CX} cy={CY} r={240} fill="url(#cg)"/>
           <circle cx={CX} cy={CY} r={420} fill="url(#hg)"/>
-          {tweaks.showAces && <AceMarkers active={active} onHover={handleHover} onClick={handleClick}/>}
-          {tweaks.showCourt && <CourtRing active={active} onHover={handleHover} onClick={handleClick}/>}
-          <ZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>
-          {tweaks.showDecans && <DecanRing active={active} onHover={handleHover} onClick={handleClick}/>}
-          {tweaks.showZodiacMajor && <MajorZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>}
-          {tweaks.showPlanetary && <Heptagram active={active} onHover={handleHover} onClick={handleClick}/>}
-          {tweaks.showElemental && <ElementalTriangle active={active} onHover={handleHover} onClick={handleClick}/>}
+          <g transform={`rotate(${zodiacRotation}, ${CX}, ${CY})`}>
+            {tweaks.showAces && <AceMarkers active={active} onHover={handleHover} onClick={handleClick}/>}
+            {tweaks.showCourt && <CourtRing active={active} onHover={handleHover} onClick={handleClick}/>}
+            <ZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>
+            {tweaks.showDecans && <DecanRing active={active} onHover={handleHover} onClick={handleClick}/>}
+            {tweaks.showZodiacMajor && <MajorZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>}
+          </g>
+          <g transform={`rotate(${planetaryRotation}, ${CX}, ${CY})`}>
+            {tweaks.showPlanetary && <Heptagram active={active} onHover={handleHover} onClick={handleClick}/>}
+            {tweaks.showElemental && <ElementalTriangle active={active} onHover={handleHover} onClick={handleClick}/>}
+          </g>
           <circle cx={CX} cy={CY} r={16} fill="none" stroke="rgba(201,169,97,0.2)" strokeWidth="0.7"/>
           <circle cx={CX} cy={CY} r={6} fill="rgba(201,169,97,0.12)" stroke="rgba(201,169,97,0.45)" strokeWidth="0.7"/>
         </svg>
         <div className="zoom-controls">
-          <button className="zoom-btn" onClick={() => {
-            const cx = vb.x + vb.w/2, cy = vb.y + vb.h/2;
-            const newW = vb.w * 0.75, newH = vb.h * 0.75;
-            const minW = BASE_VB.w * 0.15;
-            if (newW < minW) return;
-            setVb({ x: cx - newW/2, y: cy - newH/2, w: newW, h: newH });
-          }} title="Zoom in">+</button>
-          <button className="zoom-btn" onClick={() => {
-            const cx = vb.x + vb.w/2, cy = vb.y + vb.h/2;
-            const newW = vb.w * 1.33, newH = vb.h * 1.33;
-            const maxW = BASE_VB.w * 1.6;
-            if (newW > maxW) return;
-            setVb({ x: cx - newW/2, y: cy - newH/2, w: newW, h: newH });
-          }} title="Zoom out">−</button>
-          <button className="zoom-btn zoom-btn-reset" onClick={resetView} title="Reset">⟲</button>
+          <div className="rotate-group-label">Zodiac</div>
+          <button
+            className="zoom-btn"
+            onClick={() => setZodiacRotation(r => r - 10)}
+            title="Rotate zodiac -10°"
+          >Z↺</button>
+          <button
+            className="zoom-btn"
+            onClick={() => setZodiacRotation(r => r + 10)}
+            title="Rotate zodiac +10°"
+          >Z↻</button>
+          <button className="zoom-btn zoom-btn-reset" onClick={() => setZodiacRotation(0)} title="Reset zodiac rotation">Z⟲</button>
+          <div className="rotate-group-label">Planet</div>
+          <button
+            className="zoom-btn"
+            onClick={() => setPlanetaryRotation(r => r - 10)}
+            title="Rotate planetary -10°"
+          >P↺</button>
+          <button
+            className="zoom-btn"
+            onClick={() => setPlanetaryRotation(r => r + 10)}
+            title="Rotate planetary +10°"
+          >P↻</button>
+          <button className="zoom-btn zoom-btn-reset" onClick={() => setPlanetaryRotation(0)} title="Reset planetary rotation">P⟲</button>
         </div>
       </div>
       {isMobile && sheetState === 'full' && (
