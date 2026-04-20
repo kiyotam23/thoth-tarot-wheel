@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thoth Tarot — Zodiacal Wheel</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -27,7 +27,7 @@ html, body { height: 100%; overflow: hidden; }
 body {
   background: var(--bg);
   color: var(--gold);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Inter', sans-serif;
   position: relative;
 }
 #root { height: 100vh; overflow: hidden; }
@@ -71,7 +71,7 @@ body {
   letter-spacing: 4px;
   color: var(--gold-dim);
   text-transform: uppercase;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
 }
@@ -93,7 +93,7 @@ body {
 .panel-empty-text {
   font-size: 11px;
   letter-spacing: 2px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   color: var(--gold-dim);
   text-transform: uppercase;
 }
@@ -127,7 +127,7 @@ body {
   font-size: 36px;
   opacity: 0.3;
   position: relative;
-  font-family: 'Noto Sans Symbols 2', 'EB Garamond', serif;
+  font-family: 'Inter', sans-serif;
   font-variant-emoji: text;
 }
 .card-placeholder-img {
@@ -139,14 +139,14 @@ body {
   z-index: 2;
 }
 .zodiac-symbol {
-  font-family: 'Noto Sans Symbols 2', serif;
+  font-family: 'Inter', sans-serif;
   font-variant-emoji: text;
 }
 .card-placeholder-label {
   font-size: 8px;
   letter-spacing: 2px;
   color: var(--gold-dim);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   text-transform: uppercase;
   position: relative;
 }
@@ -154,7 +154,7 @@ body {
   display: inline-block;
   font-size: 8px;
   letter-spacing: 3px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   text-transform: uppercase;
   padding: 3px 8px;
   border: 1px solid currentColor;
@@ -168,7 +168,7 @@ body {
   font-size: 11px;
   letter-spacing: 3px;
   color: var(--gold-dim);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   margin-bottom: 4px;
 }
 .card-name {
@@ -191,7 +191,7 @@ body {
 .detail-label {
   font-size: 10px;
   letter-spacing: 2px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-weight: 400;
   color: var(--gold-dim);
   text-transform: uppercase;
@@ -204,7 +204,7 @@ body {
   line-height: 1.3;
 }
 .detail-value.mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-style: normal;
   font-size: 14px;
   font-weight: 500;
@@ -227,7 +227,7 @@ body {
   text-align: center;
   color: var(--purple);
   filter: brightness(1.4);
-  font-family: serif;
+  font-family: 'Inter', sans-serif;
   line-height: 1;
 }
 .hebrew-label {
@@ -239,7 +239,7 @@ body {
 .path-badge {
   font-size: 8px;
   letter-spacing: 2px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   text-transform: uppercase;
   color: var(--purple);
   filter: brightness(1.4);
@@ -297,7 +297,7 @@ body {
     font-size: 9px;
     letter-spacing: 1px;
     text-transform: uppercase;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Inter', sans-serif;
     backdrop-filter: blur(8px);
   }
   .layout.mobile-sheet-open .mobile-wheel-toggle {
@@ -369,7 +369,7 @@ body {
     border: 1px solid var(--border);
     background: rgba(10,7,16,0.75);
     color: var(--gold);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 10px;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -409,7 +409,7 @@ body {
 .tweaks-title {
   font-size: 8px;
   letter-spacing: 3px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   color: var(--gold-dim);
   text-transform: uppercase;
   border-bottom: 1px solid var(--border);
@@ -423,7 +423,7 @@ body {
 .tweak-label {
   font-size: 8px;
   letter-spacing: 2px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   color: var(--gold-dim);
   text-transform: uppercase;
 }
@@ -434,7 +434,7 @@ body {
 }
 .tweak-btn {
   font-size: 9px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   padding: 3px 7px;
   border: 1px solid var(--border);
   background: transparent;
@@ -464,7 +464,7 @@ body {
   border: 1px solid var(--border);
   background: rgba(10,7,16,0.85);
   color: var(--gold);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 18px;
   font-weight: 500;
   cursor: pointer;
@@ -504,7 +504,7 @@ body {
     <polygon points="200,128 220,188 283,188 232,226 251,287 200,249 149,287 168,226 117,188 180,188" fill="none" stroke="#c9a96150" stroke-width="0.8"/>
     <!-- Center star -->
     <circle cx="200" cy="200" r="10" fill="#c9a96130" stroke="#c9a96170" stroke-width="0.8"/>
-    <text x="200" y="204" text-anchor="middle" font-size="10" fill="#c9a96190" font-family="serif">✦</text>
+    <text x="200" y="204" text-anchor="middle" font-size="10" fill="#c9a96190" font-family="Inter">✦</text>
   </svg>
 </template>
 </head>
@@ -727,7 +727,7 @@ function ZodiacRing({ active, onHover, onClick }) {
               x={symX} y={symY}
               textAnchor="middle" dominantBaseline="middle"
               fontSize="32" fill={isHov ? ec.text : ec.accent}
-              fontFamily="'Noto Sans Symbols 2', serif"
+              fontFamily="'Inter', sans-serif"
               fontWeight="500"
               filter={isHov ? 'url(#glow2)' : undefined}
               transform={`rotate(${flip?mid+180:mid},${symX},${symY})`}
@@ -739,7 +739,7 @@ function ZodiacRing({ active, onHover, onClick }) {
               x={romX} y={romY}
               textAnchor="middle" dominantBaseline="middle"
               fontSize="11" fill={ec.accent} opacity="1"
-              fontFamily="'JetBrains Mono', monospace"
+              fontFamily="'Inter', sans-serif"
               fontWeight="500"
               letterSpacing="1"
               transform={`rotate(${flip?mid+180:mid},${romX},${romY})`}
@@ -751,7 +751,7 @@ function ZodiacRing({ active, onHover, onClick }) {
               x={nameX} y={nameY}
               textAnchor="middle" dominantBaseline="middle"
               fontSize="11" fill={isHov ? ec.text : ec.accent} opacity="1"
-              fontFamily="'Cormorant Garamond', serif"
+              fontFamily="'Inter', sans-serif"
               fontStyle="italic"
               fontWeight="500"
               transform={`rotate(${flip?mid+180:mid},${nameX},${nameY})`}
@@ -813,7 +813,7 @@ function DecanRing({ active, onHover, onClick }) {
             {/* Roman numeral */}
             <text x={qx} y={qy} textAnchor="middle" dominantBaseline="middle"
               fontSize="10" fill={isHov ? 'rgba(232,204,138,1)' : 'rgba(201,169,97,0.85)'}
-              fontFamily="'JetBrains Mono',monospace"
+              fontFamily="'Inter', sans-serif"
               fontWeight="500"
               transform={`rotate(${rot},${qx},${qy})`}
               style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s'}}>
@@ -822,7 +822,7 @@ function DecanRing({ active, onHover, onClick }) {
             {/* Card name (abbreviated) */}
             <text x={rx2} y={ry2} textAnchor="middle" dominantBaseline="middle"
               fontSize="8" fill={isHov ? sc : 'rgba(201,169,97,0.75)'}
-              fontFamily="'Cormorant Garamond',serif"
+              fontFamily="'Inter', sans-serif"
               fontWeight="500"
               fontStyle="italic"
               transform={`rotate(${rot},${rx2},${ry2})`}
@@ -860,7 +860,7 @@ function Marker({ x, y, r, roman, label, color, active, onHover, onClick, id, gl
         filter={on ? 'url(#glow2)' : undefined}
         style={{transition:'all 0.25s'}}/>
       <text x={x} y={y - 5} textAnchor="middle" dominantBaseline="middle"
-        fontSize={r >= 24 ? 14 : r >= 20 ? 12 : 11} fontFamily="'JetBrains Mono',monospace"
+        fontSize={r >= 24 ? 14 : r >= 20 ? 12 : 11} fontFamily="'Inter', sans-serif"
         fontWeight="600"
         fill={on ? color : 'rgba(201,169,97,0.95)'}
         filter={on ? 'url(#glow2)' : undefined}
@@ -869,7 +869,7 @@ function Marker({ x, y, r, roman, label, color, active, onHover, onClick, id, gl
       </text>
       {label && (
         <text x={x} y={y + (r >= 24 ? 10 : r >= 20 ? 9 : 8)} textAnchor="middle" dominantBaseline="middle"
-          fontSize={r >= 24 ? 10 : r >= 20 ? 9.5 : 9} fontFamily="'Cormorant Garamond',serif" fontStyle="italic"
+          fontSize={r >= 24 ? 10 : r >= 20 ? 9.5 : 9} fontFamily="'Inter', sans-serif" fontStyle="italic"
           fontWeight="500"
           fill={on ? color : 'rgba(201,169,97,0.85)'}
           style={{userSelect:'none', pointerEvents:'none', transition:'all 0.25s'}}>
@@ -1002,15 +1002,15 @@ function CourtRing({ active, onHover, onClick }) {
               style={{transition:'all 0.2s'}}/>
             <text x={t1x} y={t1y} textAnchor="middle" dominantBaseline="middle"
               fontSize="8.5" fill={isHov ? sc : sc}
-              fontFamily="'Cormorant Garamond',serif" fontStyle="italic"
+              fontFamily="'Inter', sans-serif" fontStyle="italic"
               fontWeight="500"
               transform={`rotate(${rot},${t1x},${t1y})`}
               style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
-              {card.rank}
+              {`${card.rank} of`}
             </text>
             <text x={t2x} y={t2y} textAnchor="middle" dominantBaseline="middle"
               fontSize="7" fill={isHov ? sc : `${sc}cc`}
-              fontFamily="'JetBrains Mono',monospace"
+              fontFamily="'Inter', sans-serif"
               fontWeight="500"
               transform={`rotate(${rot},${t2x},${t2y})`}
               style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
@@ -1042,11 +1042,11 @@ function CourtRing({ active, onHover, onClick }) {
               style={{transition:'all 0.2s'}}/>
             <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
               fontSize="9" fill={isHov ? sc : sc}
-              fontFamily="'Cormorant Garamond',serif" fontStyle="italic"
+              fontFamily="'Inter', sans-serif" fontStyle="italic"
               fontWeight="500"
               transform={`rotate(${rot},${tx},${ty})`}
               style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
-              Princess
+              {`Princess of ${card.suit}`}
             </text>
           </g>
         );
@@ -1084,7 +1084,7 @@ function AceMarkers({ active, onHover, onClick }) {
               filter={isHov ? 'url(#glow2)' : undefined}
               style={{transition:'all 0.25s'}}/>
             <text x={x} y={y+0.5} textAnchor="middle" dominantBaseline="middle"
-              fontSize="11" fontFamily="'JetBrains Mono',monospace"
+              fontSize="11" fontFamily="'Inter', sans-serif"
               fontWeight="600"
               fill={isHov ? sc : sc}
               filter={isHov ? 'url(#glow2)' : undefined}
@@ -1205,7 +1205,6 @@ function InfoPanel({ card, className = '', style, headerSlot = null }) {
   if (!card) return (
     <div className={`panel ${className}`.trim()} style={style}>
       {headerSlot}
-      <div className="panel-logo">Thoth Tarot · Zodiacal Wheel</div>
       <div className="panel-empty">
         <div className="panel-empty-glyph">✦</div>
         <div className="panel-empty-text">Hover or click<br/>any card to explore</div>
@@ -1236,10 +1235,18 @@ function InfoPanel({ card, className = '', style, headerSlot = null }) {
     : card.type === 'court' ? (card.rank === 'Knight' ? '♞' : card.rank === 'Queen' ? '♛' : card.rank === 'Prince' ? '♜' : '◈')
     : card.type === 'ace' ? '✦' : '✦';
 
+  const displayCardName =
+    card.type === 'court' ? `${card.rank} of ${card.suit}` :
+    card.type === 'minor' ? `${card.num} of ${card.suit}` :
+    card.name;
+
+  const displayCardIndex =
+    card.type === 'court' ? card.rank :
+    (card.roman || card.num);
+
   return (
     <div className={`panel ${className}`.trim()} style={style}>
       {headerSlot}
-      <div className="panel-logo">Thoth Tarot · Zodiacal Wheel</div>
 
       {/* Type badge */}
       <div><span className="card-type-badge" style={{color: typeColor, borderColor: `${typeColor}60`}}>{typeLabel}</span></div>
@@ -1249,13 +1256,14 @@ function InfoPanel({ card, className = '', style, headerSlot = null }) {
 
       {/* Number and name */}
       <div className="card-number-name">
-        <div className="card-roman">{card.roman || card.num}</div>
-        <div className="card-name" style={{color: typeColor}}>{card.name}</div>
+        <div className="card-roman">{displayCardIndex}</div>
+        <div className="card-name" style={{color: typeColor}}>{displayCardName}</div>
       </div>
 
       {/* Details grid */}
       {card.type === 'minor' && (
         <div className="detail-grid">
+          <DetailRow label="Thoth Title" value={card.name} wide/>
           <DetailRow label="Suit" value={card.suit}/>
           <DetailRow label="Number" value={card.num} mono/>
           <DetailRow label="Sign" value={SIGNS[card.sign].name}/>
@@ -1341,14 +1349,14 @@ function HebrewBlock({ card }) {
 function LegendBlock() {
   return (
     <div style={{marginTop:'auto', paddingTop:16, borderTop:'1px solid var(--border)'}}>
-      <div style={{fontSize:7, letterSpacing:3, fontFamily:'JetBrains Mono,monospace', color:'var(--gold-dim)', marginBottom:10, textTransform:'uppercase'}}>Elements</div>
+      <div style={{fontSize:7, letterSpacing:3, fontFamily:'Inter, sans-serif', color:'var(--gold-dim)', marginBottom:10, textTransform:'uppercase'}}>Elements</div>
       {Object.entries(EC).map(([el, c]) => (
         <div key={el} style={{display:'flex', alignItems:'center', gap:8, marginBottom:6}}>
           <div style={{width:8, height:8, borderRadius:'50%', background:c.accent, flexShrink:0}}/>
           <div style={{fontSize:11, fontStyle:'italic', color:'rgba(201,169,97,0.7)'}}>{el}</div>
         </div>
       ))}
-      <div style={{marginTop:14, fontSize:7, letterSpacing:3, fontFamily:'JetBrains Mono,monospace', color:'var(--gold-dim)', marginBottom:10, textTransform:'uppercase'}}>Suits</div>
+      <div style={{marginTop:14, fontSize:7, letterSpacing:3, fontFamily:'Inter, sans-serif', color:'var(--gold-dim)', marginBottom:10, textTransform:'uppercase'}}>Suits</div>
       {Object.entries(SC).map(([suit, col]) => (
         <div key={suit} style={{display:'flex', alignItems:'center', gap:8, marginBottom:6}}>
           <div style={{width:8, height:8, borderRadius:'50%', background:col, flexShrink:0}}/>
