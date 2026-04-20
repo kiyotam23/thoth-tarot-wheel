@@ -1778,7 +1778,7 @@ function App() {
                 {sheetState === 'peek' && selected && (
                   <button className="mobile-sheet-btn" onClick={expandSheet}>Full</button>
                 )}
-                {sheetState !== 'closed' && selected && (
+                {sheetState === 'full' && selected && (
                   <button className="mobile-sheet-btn" onClick={closeSheet}>Close</button>
                 )}
               </div>
