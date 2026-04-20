@@ -272,9 +272,6 @@ body {
     padding: 8px;
     z-index: 1;
   }
-  .layout.mobile-sheet-open .wheel-wrap {
-    pointer-events: none;
-  }
   .layout.mobile-wheel-hidden .wheel-wrap {
     transform: translateY(calc(-100% - 20px));
     opacity: 0.02;
@@ -1753,7 +1750,7 @@ function App() {
           <button className="zoom-btn zoom-btn-reset" onClick={resetView} title="Reset">⟲</button>
         </div>
       </div>
-      {isMobile && sheetState !== 'closed' && (
+      {isMobile && sheetState === 'full' && (
         <button
           className="mobile-backdrop"
           aria-label="Close card details"
@@ -1777,7 +1774,9 @@ function App() {
                 {sheetState === 'peek' && selected && (
                   <button className="mobile-sheet-btn" onClick={expandSheet}>Full</button>
                 )}
-                {selected && <button className="mobile-sheet-btn" onClick={closeSheet}>Close</button>}
+                {sheetState !== 'closed' && selected && (
+                  <button className="mobile-sheet-btn" onClick={closeSheet}>Close</button>
+                )}
               </div>
             </div>
           )}
