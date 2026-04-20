@@ -1698,7 +1698,7 @@ function App() {
 
   return (
     <div className={`layout ${isMobile && sheetState !== 'closed' ? 'mobile-sheet-open' : ''} ${isMobile && isWheelHiddenMobile ? 'mobile-wheel-hidden' : ''}`}>
-      {isMobile && (
+      {isMobile && sheetState === 'closed' && (
         <button
           className="mobile-wheel-toggle"
           onClick={() => setIsWheelHiddenMobile(v => !v)}
