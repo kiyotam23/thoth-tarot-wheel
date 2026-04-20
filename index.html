@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thoth Tarot — Zodiacal Wheel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0710;
+  --gold: #c9a961;
+  --gold-dim: #7a6438;
+  --gold-bright: #e8cc8a;
+  --purple: #6b3fa0;
+  --purple-dim: #3d2460;
+  --border: rgba(201,169,97,0.18);
+  --fire: #e07858;
+  --earth: #60c070;
+  --air: #d4c040;
+  --water: #6090e8;
+}
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--gold);
+  font-family: 'Cormorant Garamond', serif;
+  position: relative;
+}
+#root { height: 100vh; overflow: hidden; }
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+.wheel-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  overflow: hidden;
+}
+.wheel-svg {
+  width: 100%;
+  height: 100%;
+  max-height: 100vh;
+  display: block;
+}
+.panel {
+  width: 290px;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  padding: 28px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dim) transparent;
+}
+.panel::-webkit-scrollbar { width: 4px; }
+.panel::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+.panel-logo {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  opacity: 0.35;
+  text-align: center;
+}
+.panel-empty-glyph {
+  font-size: 48px;
+  line-height: 1;
+  opacity: 0.5;
+}
+.panel-empty-text {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+.card-placeholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(201,169,97,0.03);
+  position: relative;
+  overflow: hidden;
+}
+.card-placeholder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 8px,
+    rgba(201,169,97,0.04) 8px,
+    rgba(201,169,97,0.04) 9px
+  );
+}
+.card-placeholder-glyph {
+  font-size: 36px;
+  opacity: 0.3;
+  position: relative;
+  font-family: 'Noto Sans Symbols 2', 'EB Garamond', serif;
+  font-variant-emoji: text;
+}
+.card-placeholder-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 2;
+}
+.zodiac-symbol {
+  font-family: 'Noto Sans Symbols 2', serif;
+  font-variant-emoji: text;
+}
+.card-placeholder-label {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--gold-dim);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  position: relative;
+}
+.card-type-badge {
+  display: inline-block;
+  font-size: 8px;
+  letter-spacing: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.card-number-name {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+.card-roman {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold-dim);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 4px;
+}
+.card-name {
+  font-size: 26px;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--gold-bright);
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.detail-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+.detail-value {
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--gold);
+  line-height: 1.3;
+}
+.detail-value.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 500;
+}
+.divider {
+  height: 1px;
+  background: var(--border);
+}
+.hebrew-block {
+  background: rgba(107,63,160,0.08);
+  border: 1px solid rgba(107,63,160,0.2);
+  border-radius: 3px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hebrew-glyph {
+  font-size: 32px;
+  text-align: center;
+  color: var(--purple);
+  filter: brightness(1.4);
+  font-family: serif;
+  line-height: 1;
+}
+.hebrew-label {
+  font-size: 12px;
+  text-align: center;
+  color: var(--gold-dim);
+  font-style: italic;
+}
+.path-badge {
+  font-size: 8px;
+  letter-spacing: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  color: var(--purple);
+  filter: brightness(1.4);
+  text-align: center;
+}
+.elem-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+@media (max-width: 820px) {
+  .layout { flex-direction: column; overflow-y: auto; }
+  .wheel-wrap { height: 60vw; min-height: 300px; flex: none; padding: 8px; }
+  .panel { width: 100%; height: auto; min-height: 0; border-left: none; border-top: 1px solid var(--border); overflow-y: visible; }
+}
+/* Tweaks panel */
+.tweaks-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 310px;
+  background: rgba(10,7,16,0.96);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  width: 200px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+.tweaks-panel.visible { display: flex; }
+.tweaks-title {
+  font-size: 8px;
+  letter-spacing: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.tweak-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.tweak-label {
+  font-size: 8px;
+  letter-spacing: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+.tweak-toggle-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tweak-btn {
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--gold-dim);
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.tweak-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201,169,97,0.08);
+}
+.zoom-controls {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+.zoom-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(10,7,16,0.85);
+  color: var(--gold);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition: all 0.18s ease;
+  user-select: none;
+}
+.zoom-btn:hover {
+  border-color: var(--gold);
+  background: rgba(201,169,97,0.12);
+  color: var(--gold-bright);
+}
+.zoom-btn-reset {
+  font-size: 16px;
+  margin-top: 4px;
+  border-color: var(--gold-dim);
+}
+</style>
+<template id="__bundler_thumbnail" data-bg-color="#0a0710">
+  <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="400" height="400" fill="#0a0710"/>
+    <circle cx="200" cy="200" r="170" fill="none" stroke="#c9a96130" stroke-width="1"/>
+    <circle cx="200" cy="200" r="140" fill="none" stroke="#c9a96140" stroke-width="0.8"/>
+    <circle cx="200" cy="200" r="105" fill="none" stroke="#c9a96128" stroke-width="0.6"/>
+    <circle cx="200" cy="200" r="72"  fill="none" stroke="#6b3fa040" stroke-width="0.6"/>
+    <!-- Zodiac wedge hints -->
+    <g opacity="0.5">
+      <path d="M200,30 A170,170,0,0,1,370,200" fill="none" stroke="#e07858" stroke-width="18" stroke-opacity="0.18"/>
+      <path d="M370,200 A170,170,0,0,1,200,370" fill="none" stroke="#60c070" stroke-width="18" stroke-opacity="0.18"/>
+      <path d="M200,370 A170,170,0,0,1,30,200"  fill="none" stroke="#d4c040" stroke-width="18" stroke-opacity="0.18"/>
+      <path d="M30,200 A170,170,0,0,1,200,30"   fill="none" stroke="#6090e8" stroke-width="18" stroke-opacity="0.18"/>
+    </g>
+    <!-- Heptagram -->
+    <polygon points="200,128 220,188 283,188 232,226 251,287 200,249 149,287 168,226 117,188 180,188" fill="none" stroke="#c9a96150" stroke-width="0.8"/>
+    <!-- Center star -->
+    <circle cx="200" cy="200" r="10" fill="#c9a96130" stroke="#c9a96170" stroke-width="0.8"/>
+    <text x="200" y="204" text-anchor="middle" font-size="10" fill="#c9a96190" font-family="serif">✦</text>
+  </svg>
+</template>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useEffect, useRef } = React;
+
+// ── CONSTANTS ──────────────────────────────────────────
+const CX = 430, CY = 430;
+
+// ── DATA ───────────────────────────────────────────────
+const SIGNS = [
+  { name:'Aries',       symbol:'♈\uFE0E', element:'Fire',  modality:'Cardinal', ruler:'♂ Mars' },
+  { name:'Taurus',      symbol:'♉\uFE0E', element:'Earth', modality:'Fixed',    ruler:'♀ Venus' },
+  { name:'Gemini',      symbol:'♊\uFE0E', element:'Air',   modality:'Mutable',  ruler:'☿ Mercury' },
+  { name:'Cancer',      symbol:'♋\uFE0E', element:'Water', modality:'Cardinal', ruler:'☽ Moon' },
+  { name:'Leo',         symbol:'♌\uFE0E', element:'Fire',  modality:'Fixed',    ruler:'☉ Sun' },
+  { name:'Virgo',       symbol:'♍\uFE0E', element:'Earth', modality:'Mutable',  ruler:'☿ Mercury' },
+  { name:'Libra',       symbol:'♎\uFE0E', element:'Air',   modality:'Cardinal', ruler:'♀ Venus' },
+  { name:'Scorpio',     symbol:'♏\uFE0E', element:'Water', modality:'Fixed',    ruler:'♂ Mars' },
+  { name:'Sagittarius', symbol:'♐\uFE0E', element:'Fire',  modality:'Mutable',  ruler:'♃ Jupiter' },
+  { name:'Capricorn',   symbol:'♑\uFE0E', element:'Earth', modality:'Cardinal', ruler:'♄ Saturn' },
+  { name:'Aquarius',    symbol:'♒\uFE0E', element:'Air',   modality:'Fixed',    ruler:'♄ Saturn' },
+  { name:'Pisces',      symbol:'♓\uFE0E', element:'Water', modality:'Mutable',  ruler:'♃ Jupiter' },
+];
+
+const EC = {
+  Fire:  { bg:'rgba(200,70,40,0.13)',  stroke:'rgba(220,90,60,0.35)',  accent:'#e07858', text:'#e8a090' },
+  Earth: { bg:'rgba(40,140,60,0.13)',  stroke:'rgba(60,160,80,0.35)',  accent:'#60c070', text:'#90d890' },
+  Air:   { bg:'rgba(190,160,20,0.13)', stroke:'rgba(220,185,40,0.35)', accent:'#d4c040', text:'#e8d878' },
+  Water: { bg:'rgba(30,70,190,0.16)',  stroke:'rgba(60,100,220,0.35)', accent:'#6090e8', text:'#90b8f8' },
+};
+
+const SC = { Wands:'#e07858', Cups:'#6090e8', Swords:'#d4c040', Disks:'#60c070' };
+
+const MINOR = [
+  {id:'m0',  sign:0, decan:0, suit:'Wands',  num:2,  roman:'II',   name:'Dominion',      planet:'♂', planetName:'Mars'},
+  {id:'m1',  sign:0, decan:1, suit:'Wands',  num:3,  roman:'III',  name:'Virtue',        planet:'☉', planetName:'Sun'},
+  {id:'m2',  sign:0, decan:2, suit:'Wands',  num:4,  roman:'IV',   name:'Completion',    planet:'♀', planetName:'Venus'},
+  {id:'m3',  sign:1, decan:0, suit:'Disks',  num:5,  roman:'V',    name:'Worry',         planet:'☿', planetName:'Mercury'},
+  {id:'m4',  sign:1, decan:1, suit:'Disks',  num:6,  roman:'VI',   name:'Success',       planet:'☽', planetName:'Moon'},
+  {id:'m5',  sign:1, decan:2, suit:'Disks',  num:7,  roman:'VII',  name:'Failure',       planet:'♄', planetName:'Saturn'},
+  {id:'m6',  sign:2, decan:0, suit:'Swords', num:8,  roman:'VIII', name:'Interference',  planet:'♃', planetName:'Jupiter'},
+  {id:'m7',  sign:2, decan:1, suit:'Swords', num:9,  roman:'IX',   name:'Cruelty',       planet:'♂', planetName:'Mars'},
+  {id:'m8',  sign:2, decan:2, suit:'Swords', num:10, roman:'X',    name:'Ruin',          planet:'☉', planetName:'Sun'},
+  {id:'m9',  sign:3, decan:0, suit:'Cups',   num:2,  roman:'II',   name:'Love',          planet:'♀', planetName:'Venus'},
+  {id:'m10', sign:3, decan:1, suit:'Cups',   num:3,  roman:'III',  name:'Abundance',     planet:'☿', planetName:'Mercury'},
+  {id:'m11', sign:3, decan:2, suit:'Cups',   num:4,  roman:'IV',   name:'Luxury',        planet:'☽', planetName:'Moon'},
+  {id:'m12', sign:4, decan:0, suit:'Wands',  num:5,  roman:'V',    name:'Strife',        planet:'♄', planetName:'Saturn'},
+  {id:'m13', sign:4, decan:1, suit:'Wands',  num:6,  roman:'VI',   name:'Victory',       planet:'♃', planetName:'Jupiter'},
+  {id:'m14', sign:4, decan:2, suit:'Wands',  num:7,  roman:'VII',  name:'Valour',        planet:'♂', planetName:'Mars'},
+  {id:'m15', sign:5, decan:0, suit:'Disks',  num:8,  roman:'VIII', name:'Prudence',      planet:'☉', planetName:'Sun'},
+  {id:'m16', sign:5, decan:1, suit:'Disks',  num:9,  roman:'IX',   name:'Gain',          planet:'♀', planetName:'Venus'},
+  {id:'m17', sign:5, decan:2, suit:'Disks',  num:10, roman:'X',    name:'Wealth',        planet:'☿', planetName:'Mercury'},
+  {id:'m18', sign:6, decan:0, suit:'Swords', num:2,  roman:'II',   name:'Peace',         planet:'☽', planetName:'Moon'},
+  {id:'m19', sign:6, decan:1, suit:'Swords', num:3,  roman:'III',  name:'Sorrow',        planet:'♄', planetName:'Saturn'},
+  {id:'m20', sign:6, decan:2, suit:'Swords', num:4,  roman:'IV',   name:'Truce',         planet:'♃', planetName:'Jupiter'},
+  {id:'m21', sign:7, decan:0, suit:'Cups',   num:5,  roman:'V',    name:'Disappointment',planet:'♂', planetName:'Mars'},
+  {id:'m22', sign:7, decan:1, suit:'Cups',   num:6,  roman:'VI',   name:'Pleasure',      planet:'☉', planetName:'Sun'},
+  {id:'m23', sign:7, decan:2, suit:'Cups',   num:7,  roman:'VII',  name:'Debauch',       planet:'♀', planetName:'Venus'},
+  {id:'m24', sign:8, decan:0, suit:'Wands',  num:8,  roman:'VIII', name:'Swiftness',     planet:'☿', planetName:'Mercury'},
+  {id:'m25', sign:8, decan:1, suit:'Wands',  num:9,  roman:'IX',   name:'Strength',      planet:'☽', planetName:'Moon'},
+  {id:'m26', sign:8, decan:2, suit:'Wands',  num:10, roman:'X',    name:'Oppression',    planet:'♄', planetName:'Saturn'},
+  {id:'m27', sign:9, decan:0, suit:'Disks',  num:2,  roman:'II',   name:'Change',        planet:'♃', planetName:'Jupiter'},
+  {id:'m28', sign:9, decan:1, suit:'Disks',  num:3,  roman:'III',  name:'Work',          planet:'♂', planetName:'Mars'},
+  {id:'m29', sign:9, decan:2, suit:'Disks',  num:4,  roman:'IV',   name:'Power',         planet:'☉', planetName:'Sun'},
+  {id:'m30', sign:10,decan:0, suit:'Swords', num:5,  roman:'V',    name:'Defeat',        planet:'♀', planetName:'Venus'},
+  {id:'m31', sign:10,decan:1, suit:'Swords', num:6,  roman:'VI',   name:'Science',       planet:'☿', planetName:'Mercury'},
+  {id:'m32', sign:10,decan:2, suit:'Swords', num:7,  roman:'VII',  name:'Futility',      planet:'☽', planetName:'Moon'},
+  {id:'m33', sign:11,decan:0, suit:'Cups',   num:8,  roman:'VIII', name:'Indolence',     planet:'♄', planetName:'Saturn'},
+  {id:'m34', sign:11,decan:1, suit:'Cups',   num:9,  roman:'IX',   name:'Happiness',     planet:'♃', planetName:'Jupiter'},
+  {id:'m35', sign:11,decan:2, suit:'Cups',   num:10, roman:'X',    name:'Satiety',       planet:'♂', planetName:'Mars'},
+];
+
+const MAJ_Z = [
+  {id:'z0',  sign:0, num:4,  roman:'IV',   name:'The Emperor',   short:'Emperor',   hebrew:'ה', hebrewName:'Heh',   path:'Simple Letter'},
+  {id:'z1',  sign:1, num:5,  roman:'V',    name:'The Hierophant',short:'Hierophant',hebrew:'ו', hebrewName:'Vav',   path:'Simple Letter'},
+  {id:'z2',  sign:2, num:6,  roman:'VI',   name:'The Lovers',    short:'Lovers',    hebrew:'ז', hebrewName:'Zayin', path:'Simple Letter'},
+  {id:'z3',  sign:3, num:7,  roman:'VII',  name:'The Chariot',   short:'Chariot',   hebrew:'ח', hebrewName:'Cheth', path:'Simple Letter'},
+  {id:'z4',  sign:4, num:11, roman:'XI',   name:'Lust',          short:'Lust',      hebrew:'ט', hebrewName:'Teth',  path:'Simple Letter'},
+  {id:'z5',  sign:5, num:9,  roman:'IX',   name:'The Hermit',    short:'Hermit',    hebrew:'י', hebrewName:'Yod',   path:'Simple Letter'},
+  {id:'z6',  sign:6, num:8,  roman:'VIII', name:'Adjustment',    short:'Adjustment',hebrew:'ל', hebrewName:'Lamed', path:'Simple Letter'},
+  {id:'z7',  sign:7, num:13, roman:'XIII', name:'Death',         short:'Death',     hebrew:'נ', hebrewName:'Nun',   path:'Simple Letter'},
+  {id:'z8',  sign:8, num:14, roman:'XIV',  name:'Art',           short:'Art',       hebrew:'ס', hebrewName:'Samekh',path:'Simple Letter'},
+  {id:'z9',  sign:9, num:15, roman:'XV',   name:'The Devil',     short:'Devil',     hebrew:'ע', hebrewName:'Ayin',  path:'Simple Letter'},
+  {id:'z10', sign:10,num:17, roman:'XVII', name:'The Star',      short:'Star',      hebrew:'צ', hebrewName:'Tzaddi',path:'Simple Letter'},
+  {id:'z11', sign:11,num:18, roman:'XVIII',name:'The Moon',      short:'Moon',      hebrew:'ק', hebrewName:'Qoph',  path:'Simple Letter'},
+];
+
+const MAJ_P = [
+  {id:'p0', idx:0, num:1,  roman:'I',    name:'The Magus',    short:'Magus',    planet:'☿', planetName:'Mercury', hebrew:'ב', hebrewName:'Beth',   path:'Double Letter'},
+  {id:'p1', idx:1, num:2,  roman:'II',   name:'The Priestess',short:'Priestess',planet:'☽', planetName:'Moon',    hebrew:'ג', hebrewName:'Gimel',  path:'Double Letter'},
+  {id:'p2', idx:2, num:3,  roman:'III',  name:'The Empress',  short:'Empress',  planet:'♀', planetName:'Venus',   hebrew:'ד', hebrewName:'Daleth', path:'Double Letter'},
+  {id:'p3', idx:3, num:10, roman:'X',    name:'Fortune',      short:'Fortune',  planet:'♃', planetName:'Jupiter', hebrew:'כ', hebrewName:'Kaph',   path:'Double Letter'},
+  {id:'p4', idx:4, num:16, roman:'XVI',  name:'The Tower',    short:'Tower',    planet:'♂', planetName:'Mars',    hebrew:'פ', hebrewName:'Peh',    path:'Double Letter'},
+  {id:'p5', idx:5, num:19, roman:'XIX',  name:'The Sun',      short:'Sun',      planet:'☉', planetName:'Sun',     hebrew:'ר', hebrewName:'Resh',   path:'Double Letter'},
+  {id:'p6', idx:6, num:21, roman:'XXI',  name:'The Universe', short:'Universe', planet:'♄', planetName:'Saturn',  hebrew:'ת', hebrewName:'Tav',    path:'Double Letter'},
+];
+
+const MAJ_E = [
+  {id:'e0', num:0,  roman:'0',   name:'The Fool',      short:'Fool',       element:'Air',   planet:'♅', planetName:'Uranus',  hebrew:'א', hebrewName:'Aleph', path:'Mother Letter'},
+  {id:'e1', num:12, roman:'XII', name:'The Hanged Man',short:'Hanged Man', element:'Water', planet:'♆', planetName:'Neptune', hebrew:'מ', hebrewName:'Mem',   path:'Mother Letter'},
+  {id:'e2', num:20, roman:'XX',  name:'The Aeon',      short:'Aeon',       element:'Fire',  planet:'♇', planetName:'Pluto',   hebrew:'ש', hebrewName:'Shin',  path:'Mother Letter'},
+];
+
+// Court Cards: Knights/Queens/Princes span 30° each, tiling full 360°
+const COURT_KQP = [
+  {id:'c00', rank:'Queen',  suit:'Wands',  a1:350, a2:20,  mid:5,   element:'Water of Fire'},
+  {id:'c01', rank:'Prince', suit:'Disks',  a1:20,  a2:50,  mid:35,  element:'Air of Earth'},
+  {id:'c02', rank:'Knight', suit:'Swords', a1:50,  a2:80,  mid:65,  element:'Fire of Air'},
+  {id:'c03', rank:'Queen',  suit:'Cups',   a1:80,  a2:110, mid:95,  element:'Water of Water'},
+  {id:'c04', rank:'Prince', suit:'Wands',  a1:110, a2:140, mid:125, element:'Air of Fire'},
+  {id:'c05', rank:'Knight', suit:'Disks',  a1:140, a2:170, mid:155, element:'Fire of Earth'},
+  {id:'c06', rank:'Queen',  suit:'Swords', a1:170, a2:200, mid:185, element:'Water of Air'},
+  {id:'c07', rank:'Prince', suit:'Cups',   a1:200, a2:230, mid:215, element:'Air of Water'},
+  {id:'c08', rank:'Knight', suit:'Wands',  a1:230, a2:260, mid:245, element:'Fire of Fire'},
+  {id:'c09', rank:'Queen',  suit:'Disks',  a1:260, a2:290, mid:275, element:'Water of Earth'},
+  {id:'c10', rank:'Prince', suit:'Swords', a1:290, a2:320, mid:305, element:'Air of Air'},
+  {id:'c11', rank:'Knight', suit:'Cups',   a1:320, a2:350, mid:335, element:'Fire of Water'},
+];
+
+// Princesses: NO zodiacal attribution — each rules a full 90° quadrant (3 signs)
+// centered on the fixed sign of their element (Book of Thoth, Crowley)
+const COURT_PS = [
+  {id:'ps0', rank:'Princess', suit:'Disks',  a1:0,   a2:90,  mid:45,  element:'Earth of Earth', desc:'Aries · Taurus · Gemini'},
+  {id:'ps1', rank:'Princess', suit:'Wands',  a1:90,  a2:180, mid:135, element:'Earth of Fire',  desc:'Cancer · Leo · Virgo'},
+  {id:'ps2', rank:'Princess', suit:'Cups',   a1:180, a2:270, mid:225, element:'Earth of Water', desc:'Libra · Scorpio · Sagittarius'},
+  {id:'ps3', rank:'Princess', suit:'Swords', a1:270, a2:360, mid:315, element:'Earth of Air',   desc:'Capricorn · Aquarius · Pisces'},
+];
+
+// Aces: placed at the midpoint of each Princess quadrant (fixed sign center)
+// Disks=45° (Taurus), Wands=135° (Leo), Cups=225° (Scorpio), Swords=315° (Aquarius)
+const ACES = [
+  {id:'a0', suit:'Disks',  roman:'I', name:'Ace of Disks',  element:'Earth', angle:45,  desc:'Root of the Powers of Earth'},
+  {id:'a1', suit:'Wands',  roman:'I', name:'Ace of Wands',  element:'Fire',  angle:135, desc:'Root of the Powers of Fire'},
+  {id:'a2', suit:'Cups',   roman:'I', name:'Ace of Cups',   element:'Water', angle:225, desc:'Root of the Powers of Water'},
+  {id:'a3', suit:'Swords', roman:'I', name:'Ace of Swords', element:'Air',   angle:315, desc:'Root of the Powers of Air'},
+];
+
+// ── HELPERS ────────────────────────────────────────────
+function polar(r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return [CX + r * Math.cos(rad), CY + r * Math.sin(rad)];
+}
+
+function arc(ri, ro, a1, a2) {
+  const [x1,y1] = polar(ro, a1), [x2,y2] = polar(ro, a2);
+  const [x3,y3] = polar(ri, a2), [x4,y4] = polar(ri, a1);
+  const lg = (a2-a1) > 180 ? 1 : 0;
+  return `M${x1},${y1} A${ro},${ro},0,${lg},1,${x2},${y2} L${x3},${y3} A${ri},${ri},0,${lg},0,${x4},${y4} Z`;
+}
+
+// ── STARS ──────────────────────────────────────────────
+const STARS = (() => {
+  let s = 42;
+  const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+  return Array.from({length:150}, () => ({ x: rnd()*860, y: rnd()*860, r: rnd()*1.1+0.2, o: rnd()*0.35+0.08 }));
+})();
+
+// ── SVG DEFS ───────────────────────────────────────────
+function Defs() {
+  return (
+    <defs>
+      <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow2" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="3" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow3" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="8" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <radialGradient id="cg" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#6b3fa0" stopOpacity="0.25"/>
+        <stop offset="60%" stopColor="#3d1060" stopOpacity="0.1"/>
+        <stop offset="100%" stopColor="#0a0710" stopOpacity="0"/>
+      </radialGradient>
+      <radialGradient id="hg" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#c9a961" stopOpacity="0.06"/>
+        <stop offset="100%" stopColor="#c9a961" stopOpacity="0"/>
+      </radialGradient>
+    </defs>
+  );
+}
+
+// ── ZODIAC RING ────────────────────────────────────────
+const RZO = 405, RZI = 348;
+
+function ZodiacRing({ active, onHover, onClick }) {
+  return (
+    <g>
+      {SIGNS.map((sg, i) => {
+        const majorCard = MAJ_Z.find(c => c.sign === i);
+        const a1 = i*30, a2 = a1+30, mid = a1+15;
+        const ec = EC[sg.element];
+        const isHov = active?.id === majorCard.id;
+        const flip = mid > 90 && mid <= 270;
+        // three concentric positions inside the zodiac cell
+        const [symX, symY] = polar((RZO + RZI) / 2 + 10, mid); // symbol — upper area
+        const [romX, romY] = polar((RZO + RZI) / 2 - 8, mid);  // roman numeral — middle
+        const [nameX, nameY] = polar(RZI + 6, mid);             // card name — inner edge
+        return (
+          <g key={i} style={{cursor:'pointer'}}
+            onMouseEnter={() => onHover({...majorCard, type:'major-zodiac', signInfo: sg})}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => {
+              const payload = {...majorCard, type:'major-zodiac', signInfo: sg};
+              onClick(prev => prev?.id===majorCard.id ? null : payload);
+            }}>
+            <path d={arc(RZI, RZO, a1, a2)}
+              fill={isHov ? ec.bg.replace('0.13','0.32') : ec.bg}
+              stroke={ec.stroke} strokeWidth="0.8"
+              style={{transition:'fill 0.2s'}}/>
+            {/* sign symbol — large, flat */}
+            <text
+              x={symX} y={symY}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="32" fill={isHov ? ec.text : ec.accent}
+              fontFamily="'Noto Sans Symbols 2', serif"
+              fontWeight="500"
+              filter={isHov ? 'url(#glow2)' : undefined}
+              transform={`rotate(${flip?mid+180:mid},${symX},${symY})`}
+              style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s', fontVariantEmoji:'text'}}>
+              {sg.symbol}
+            </text>
+            {/* roman numeral */}
+            <text
+              x={romX} y={romY}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="11" fill={ec.accent} opacity="1"
+              fontFamily="'JetBrains Mono', monospace"
+              fontWeight="500"
+              letterSpacing="1"
+              transform={`rotate(${flip?mid+180:mid},${romX},${romY})`}
+              style={{userSelect:'none', pointerEvents:'none'}}>
+              {majorCard.roman}
+            </text>
+            {/* card name */}
+            <text
+              x={nameX} y={nameY}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="11" fill={isHov ? ec.text : ec.accent} opacity="1"
+              fontFamily="'Cormorant Garamond', serif"
+              fontStyle="italic"
+              fontWeight="500"
+              transform={`rotate(${flip?mid+180:mid},${nameX},${nameY})`}
+              style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s'}}>
+              {majorCard.short}
+            </text>
+            {/* divider */}
+            {(() => { const [dx1,dy1]=polar(RZI,a1),[dx2,dy2]=polar(RZO,a1);
+              return <line x1={dx1} y1={dy1} x2={dx2} y2={dy2} stroke="rgba(201,169,97,0.25)" strokeWidth="0.5"/>; })()}
+          </g>
+        );
+      })}
+      <circle cx={CX} cy={CY} r={RZO} fill="none" stroke="rgba(201,169,97,0.3)" strokeWidth="1"/>
+      <circle cx={CX} cy={CY} r={RZI} fill="none" stroke="rgba(201,169,97,0.2)" strokeWidth="0.5"/>
+    </g>
+  );
+}
+
+// ── DECAN RING ─────────────────────────────────────────
+const RDO = 343, RDI = 248;
+
+function DecanRing({ active, onHover, onClick }) {
+  return (
+    <g>
+      {MINOR.map((card, i) => {
+        const a1 = card.sign*30 + card.decan*10;
+        const a2 = a1 + 10;
+        const mid = a1 + 5;
+        const sc = SC[card.suit];
+        const isHov = active?.id === card.id;
+        const flip = mid > 90 && mid <= 270;
+        const rot = flip ? mid + 180 : mid;
+
+        // Text positions
+        const [px, py] = polar((RDO+RDI)/2 + 28, mid);
+        const [qx, qy] = polar((RDO+RDI)/2 + 8, mid);
+        const [rx2, ry2] = polar((RDO+RDI)/2 - 12, mid);
+
+        return (
+          <g key={card.id} style={{cursor:'pointer'}}
+            onMouseEnter={() => onHover({...card, type:'minor'})}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'minor'})}>
+            <path d={arc(RDI, RDO, a1, a2)}
+              fill={isHov ? 'rgba(201,169,97,0.12)' : 'rgba(201,169,97,0.03)'}
+              stroke={isHov ? sc : 'rgba(201,169,97,0.22)'}
+              strokeWidth={isHov ? '1' : '0.6'}
+              filter={isHov ? 'url(#glow2)' : undefined}
+              style={{transition:'all 0.2s'}}/>
+            {/* Planet symbol */}
+            <text x={px} y={py} textAnchor="middle" dominantBaseline="middle"
+              fontSize="13" fill={isHov ? sc : 'rgba(201,169,97,0.9)'}
+              fontWeight="500"
+              filter={isHov ? 'url(#glow2)' : undefined}
+              transform={`rotate(${rot},${px},${py})`}
+              style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s'}}>
+              {card.planet}
+            </text>
+            {/* Roman numeral */}
+            <text x={qx} y={qy} textAnchor="middle" dominantBaseline="middle"
+              fontSize="10" fill={isHov ? 'rgba(232,204,138,1)' : 'rgba(201,169,97,0.85)'}
+              fontFamily="'JetBrains Mono',monospace"
+              fontWeight="500"
+              transform={`rotate(${rot},${qx},${qy})`}
+              style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s'}}>
+              {card.roman}
+            </text>
+            {/* Card name (abbreviated) */}
+            <text x={rx2} y={ry2} textAnchor="middle" dominantBaseline="middle"
+              fontSize="8" fill={isHov ? sc : 'rgba(201,169,97,0.75)'}
+              fontFamily="'Cormorant Garamond',serif"
+              fontWeight="500"
+              fontStyle="italic"
+              transform={`rotate(${rot},${rx2},${ry2})`}
+              style={{userSelect:'none', pointerEvents:'none', transition:'all 0.2s'}}>
+              {card.name.slice(0,8)}
+            </text>
+          </g>
+        );
+      })}
+      {/* Divider lines at sign boundaries */}
+      {SIGNS.map((_,i) => {
+        const [dx1,dy1]=polar(RDI,i*30),[dx2,dy2]=polar(RDO,i*30);
+        return <line key={i} x1={dx1} y1={dy1} x2={dx2} y2={dy2} stroke="rgba(201,169,97,0.35)" strokeWidth="0.8"/>;
+      })}
+      <circle cx={CX} cy={CY} r={RDO} fill="none" stroke="rgba(201,169,97,0.18)" strokeWidth="0.5"/>
+      <circle cx={CX} cy={CY} r={RDI} fill="none" stroke="rgba(201,169,97,0.18)" strokeWidth="0.5"/>
+    </g>
+  );
+}
+
+// ── MARKER ────────────────────────────────────────────
+function Marker({ x, y, r, roman, label, color, active, onHover, onClick, id, glyph }) {
+  const [hov, setHov] = useState(false);
+  const on = hov || active;
+  return (
+    <g style={{cursor:'pointer'}}
+      onMouseEnter={() => { setHov(true); onHover(); }}
+      onMouseLeave={() => { setHov(false); onHover(null); }}
+      onClick={onClick}>
+      {on && <circle cx={x} cy={y} r={r+5} fill={color} opacity="0.15" filter="url(#glow3)"/>}
+      <circle cx={x} cy={y} r={r}
+        fill={on ? `${color}22` : 'rgba(10,7,16,0.85)'}
+        stroke={on ? color : 'rgba(201,169,97,0.4)'}
+        strokeWidth={on ? 1.2 : 0.7}
+        filter={on ? 'url(#glow2)' : undefined}
+        style={{transition:'all 0.25s'}}/>
+      <text x={x} y={y - 5} textAnchor="middle" dominantBaseline="middle"
+        fontSize={r >= 24 ? 14 : r >= 20 ? 12 : 11} fontFamily="'JetBrains Mono',monospace"
+        fontWeight="600"
+        fill={on ? color : 'rgba(201,169,97,0.95)'}
+        filter={on ? 'url(#glow2)' : undefined}
+        style={{userSelect:'none', pointerEvents:'none', transition:'all 0.25s'}}>
+        {glyph || roman}
+      </text>
+      {label && (
+        <text x={x} y={y + (r >= 24 ? 10 : r >= 20 ? 9 : 8)} textAnchor="middle" dominantBaseline="middle"
+          fontSize={r >= 24 ? 10 : r >= 20 ? 9.5 : 9} fontFamily="'Cormorant Garamond',serif" fontStyle="italic"
+          fontWeight="500"
+          fill={on ? color : 'rgba(201,169,97,0.85)'}
+          style={{userSelect:'none', pointerEvents:'none', transition:'all 0.25s'}}>
+          {label}
+        </text>
+      )}
+    </g>
+  );
+}
+
+// ── MAJOR ZODIAC RING ──────────────────────────────────
+const RMZ = 222;
+
+function MajorZodiacRing({ active, onHover, onClick }) {
+  return (
+    <g>
+      {MAJ_Z.map(card => {
+        const mid = card.sign * 30 + 15;
+        const [x, y] = polar(RMZ, mid);
+        const ec = EC[SIGNS[card.sign].element];
+        return (
+          <Marker key={card.id} x={x} y={y} r={27}
+            roman={card.roman} label={card.short} glyph={card.roman}
+            color={ec.accent}
+            active={active?.id === card.id}
+            onHover={(v) => onHover(v === null ? null : {...card, type:'major-zodiac', signInfo: SIGNS[card.sign]})}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-zodiac', signInfo: SIGNS[card.sign]})}
+            id={card.id}/>
+        );
+      })}
+      <circle cx={CX} cy={CY} r={RMZ} fill="none" stroke="rgba(201,169,97,0.1)" strokeWidth="0.5" strokeDasharray="2 4"/>
+    </g>
+  );
+}
+
+// ── HEPTAGRAM ──────────────────────────────────────────
+const RHP = 152;
+
+function Heptagram({ active, onHover, onClick }) {
+  const pts = MAJ_P.map((_, i) => polar(RHP, i * (360/7)));
+
+  // Draw heptagram lines
+  const lines = [];
+  for (let i = 0; i < 7; i++) {
+    const j = (i + 3) % 7; // {7/3} star
+    lines.push(<line key={i} x1={pts[i][0]} y1={pts[i][1]} x2={pts[j][0]} y2={pts[j][1]}
+      stroke="rgba(107,63,160,0.25)" strokeWidth="0.6"/>);
+  }
+
+  return (
+    <g>
+      {lines}
+      {MAJ_P.map((card, i) => {
+        const [x, y] = pts[i];
+        return (
+          <Marker key={card.id} x={x} y={y} r={24}
+            roman={card.roman} glyph={card.planet} label={card.short}
+            color="#c9a961"
+            active={active?.id === card.id}
+            onHover={(v) => onHover(v === null ? null : {...card, type:'major-planet'})}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-planet'})}
+            id={card.id}/>
+        );
+      })}
+    </g>
+  );
+}
+
+// ── ELEMENTAL TRIANGLE ─────────────────────────────────
+const RET = 62;
+
+function ElementalTriangle({ active, onHover, onClick }) {
+  const angles = [270, 30, 150]; // Fool top, Aeon BR, HM BL — wait spec says Fool Air, HM Water, Aeon Fire
+  const triAngles = [270, 30, 150]; // top, bottom-right, bottom-left
+  const elemOrder = [MAJ_E[0], MAJ_E[2], MAJ_E[1]]; // Fool, Aeon, Hanged Man
+  const elemColors = ['#d4c040', '#e07858', '#6090e8']; // Air, Fire, Water
+
+  const pts = triAngles.map(a => polar(RET, a));
+
+  return (
+    <g>
+      {/* Triangle outline */}
+      <polygon
+        points={pts.map(p=>p.join(',')).join(' ')}
+        fill="none"
+        stroke="rgba(107,63,160,0.3)"
+        strokeWidth="0.7"/>
+      {elemOrder.map((card, i) => {
+        const [x, y] = pts[i];
+        return (
+          <Marker key={card.id} x={x} y={y} r={22}
+            roman={card.roman} glyph={card.planet} label={card.short}
+            color={elemColors[i]}
+            active={active?.id === card.id}
+            onHover={(v) => onHover(v === null ? null : {...card, type:'major-elemental', elemColor: elemColors[i]})}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-elemental', elemColor: elemColors[i]})}
+            id={card.id}/>
+        );
+      })}
+    </g>
+  );
+}
+
+// ── COURT CARD RING ────────────────────────────────────
+const RKQP_O = 434, RKQP_I = 411; // Knights / Queens / Princes sub-ring
+const RPS_O  = 454, RPS_I  = 436; // Princesses sub-ring
+
+function CourtRing({ active, onHover, onClick }) {
+  return (
+    <g>
+      {/* Knights, Queens, Princes — continuous 30° wedges */}
+      {COURT_KQP.map(card => {
+        const a2 = card.a2 <= card.a1 ? card.a2 + 360 : card.a2;
+        const sc = SC[card.suit];
+        const isHov = active?.id === card.id;
+        const flip = card.mid > 90 && card.mid <= 270;
+        const rot = flip ? card.mid + 180 : card.mid;
+        const [t1x,t1y] = polar(RKQP_I + 15, card.mid);
+        const [t2x,t2y] = polar(RKQP_I + 6,  card.mid);
+        return (
+          <g key={card.id} style={{cursor:'pointer'}}
+            onMouseEnter={() => onHover({...card, type:'court'})}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'court'})}>
+            <path d={arc(RKQP_I, RKQP_O, card.a1, a2)}
+              fill={isHov ? `${sc}22` : `${sc}09`}
+              stroke={isHov ? sc : `${sc}50`}
+              strokeWidth={isHov ? '0.9' : '0.4'}
+              filter={isHov ? 'url(#glow2)' : undefined}
+              style={{transition:'all 0.2s'}}/>
+            <text x={t1x} y={t1y} textAnchor="middle" dominantBaseline="middle"
+              fontSize="8.5" fill={isHov ? sc : sc}
+              fontFamily="'Cormorant Garamond',serif" fontStyle="italic"
+              fontWeight="500"
+              transform={`rotate(${rot},${t1x},${t1y})`}
+              style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
+              {card.rank}
+            </text>
+            <text x={t2x} y={t2y} textAnchor="middle" dominantBaseline="middle"
+              fontSize="7" fill={isHov ? sc : `${sc}cc`}
+              fontFamily="'JetBrains Mono',monospace"
+              fontWeight="500"
+              transform={`rotate(${rot},${t2x},${t2y})`}
+              style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
+              {card.suit}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Princesses — outer sub-ring, dashed arcs at cardinal cusps */}
+      {COURT_PS.map(card => {
+        const a2 = card.a2 <= card.a1 ? card.a2 + 360 : card.a2;
+        const sc = SC[card.suit];
+        const isHov = active?.id === card.id;
+        const flip = card.mid > 90 && card.mid <= 270;
+        const rot = flip ? card.mid + 180 : card.mid;
+        const [tx, ty] = polar((RPS_O + RPS_I) / 2, card.mid);
+        return (
+          <g key={card.id} style={{cursor:'pointer'}}
+            onMouseEnter={() => onHover({...card, type:'court'})}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'court'})}>
+            <path d={arc(RPS_I, RPS_O, card.a1, a2)}
+              fill={isHov ? `${sc}28` : `${sc}0d`}
+              stroke={isHov ? sc : `${sc}60`}
+              strokeWidth={isHov ? '0.9' : '0.5'}
+              strokeDasharray={isHov ? undefined : '2.5 2'}
+              filter={isHov ? 'url(#glow2)' : undefined}
+              style={{transition:'all 0.2s'}}/>
+            <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
+              fontSize="9" fill={isHov ? sc : sc}
+              fontFamily="'Cormorant Garamond',serif" fontStyle="italic"
+              fontWeight="500"
+              transform={`rotate(${rot},${tx},${ty})`}
+              style={{userSelect:'none',pointerEvents:'none',transition:'fill 0.2s'}}>
+              Princess
+            </text>
+          </g>
+        );
+      })}
+
+      <circle cx={CX} cy={CY} r={RPS_O}  fill="none" stroke="rgba(201,169,97,0.18)" strokeWidth="0.6"/>
+      <circle cx={CX} cy={CY} r={RPS_I}  fill="none" stroke="rgba(201,169,97,0.12)" strokeWidth="0.4" strokeDasharray="2 3"/>
+      <circle cx={CX} cy={CY} r={RKQP_I} fill="none" stroke="rgba(201,169,97,0.18)" strokeWidth="0.6"/>
+    </g>
+  );
+}
+
+// ── ACE MARKERS ────────────────────────────────────────
+const RA = 466;
+
+function AceMarkers({ active, onHover, onClick }) {
+  return (
+    <g>
+      {ACES.map(card => {
+        const [x, y] = polar(RA, card.angle);
+        const sc = SC[card.suit];
+        const isHov = active?.id === card.id;
+        return (
+          <g key={card.id} style={{cursor:'pointer'}}
+            onMouseEnter={() => onHover({...card, type:'ace'})}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'ace'})}>
+            {isHov && <circle cx={x} cy={y} r={21} fill={sc} opacity="0.14" filter="url(#glow3)"/>}
+            {/* Diamond */}
+            <rect x={x-11} y={y-11} width="22" height="22"
+              transform={`rotate(45,${x},${y})`}
+              fill={isHov ? `${sc}28` : 'rgba(10,7,16,0.92)'}
+              stroke={isHov ? sc : sc}
+              strokeWidth={isHov ? '1.4' : '1'}
+              filter={isHov ? 'url(#glow2)' : undefined}
+              style={{transition:'all 0.25s'}}/>
+            <text x={x} y={y+0.5} textAnchor="middle" dominantBaseline="middle"
+              fontSize="11" fontFamily="'JetBrains Mono',monospace"
+              fontWeight="600"
+              fill={isHov ? sc : sc}
+              filter={isHov ? 'url(#glow2)' : undefined}
+              style={{userSelect:'none',pointerEvents:'none',transition:'all 0.25s'}}>
+              I
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+// ── WHEEL ──────────────────────────────────────────────
+function Wheel({ active, onHover, onClick }) {
+  return (
+    <svg viewBox="0 0 860 860" className="wheel-svg" style={{overflow:'visible'}}>
+      <Defs/>
+      {/* Star field */}
+      <g opacity="0.7">
+        {STARS.map((s,i) => <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="white" opacity={s.o}/>)}
+      </g>
+      {/* Center glow */}
+      <circle cx={CX} cy={CY} r={240} fill="url(#cg)"/>
+      <circle cx={CX} cy={CY} r={420} fill="url(#hg)"/>
+      {/* Rings */}
+      <ZodiacRing active={active} onHover={onHover} onClick={onClick}/>
+      <DecanRing active={active} onHover={onHover} onClick={onClick}/>
+      <MajorZodiacRing active={active} onHover={onHover} onClick={onClick}/>
+      <Heptagram active={active} onHover={onHover} onClick={onClick}/>
+      <ElementalTriangle active={active} onHover={onHover} onClick={onClick}/>
+      {/* Center decoration */}
+      <circle cx={CX} cy={CY} r={16} fill="none" stroke="rgba(201,169,97,0.25)" strokeWidth="0.7"/>
+      <circle cx={CX} cy={CY} r={6} fill="rgba(201,169,97,0.15)" stroke="rgba(201,169,97,0.5)" strokeWidth="0.7"/>
+      {/* Ring label arcs (invisible anchor for decoration) */}
+      <circle cx={CX} cy={CY} r={RMZ} fill="none" stroke="none"/>
+    </svg>
+  );
+}
+
+// ── INFO PANEL ─────────────────────────────────────────
+function DetailRow({ label, value, mono, wide }) {
+  return (
+    <div className="detail-item" style={wide ? {gridColumn:'1/-1'} : {}}>
+      <div className="detail-label">{label}</div>
+      <div className={`detail-value${mono?' mono':''}`}>{value}</div>
+    </div>
+  );
+}
+
+// ── CARD IMAGE RESOLUTION ──────────────────────────────
+// Converts a card name into a filename, e.g.:
+//   "The Fool"       → "the-fool"
+//   "The Hanged Man" → "the-hanged-man"
+//   "Lust"           → "lust"
+//   "Dominion"       → "dominion"
+//   "Ace of Wands"   → "ace-of-wands"
+//   "Knight of Cups" → "knight-of-cups"
+function cardFilename(name) {
+  if (!name) return null;
+  return name
+    .toLowerCase()
+    .replace(/[''']/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function getCardImageSrc(card) {
+  if (!card) return null;
+  // Court cards: "knight-of-wands.png"
+  if (card.type === 'court') {
+    const rank = card.rank?.toLowerCase();
+    const suit = card.suit?.toLowerCase();
+    if (rank && suit) return `images/${rank}-of-${suit}.png`;
+  }
+  // Aces: "ace-of-wands.png"
+  if (card.type === 'ace') {
+    const suit = card.suit?.toLowerCase();
+    if (suit) return `images/ace-of-${suit}.png`;
+  }
+  // Pip minor arcana (2–10): "2-of-wands.png"
+  if (card.type === 'minor' && card.num && card.suit) {
+    return `images/${card.num}-of-${card.suit.toLowerCase()}.png`;
+  }
+  // Majors: use card name, e.g. "the-fool.png", "lust.png"
+  const fn = cardFilename(card.name);
+  return fn ? `images/${fn}.png` : null;
+}
+
+function CardImage({ card, fallbackGlyph, fallbackColor }) {
+  const [errored, setErrored] = useState(false);
+  const src = getCardImageSrc(card);
+  // Reset error state when card changes
+  useEffect(() => { setErrored(false); }, [src]);
+
+  return (
+    <div className="card-placeholder">
+      {src && !errored && (
+        <img
+          className="card-placeholder-img"
+          src={src}
+          alt={card?.name || 'card'}
+          onError={() => setErrored(true)}
+        />
+      )}
+      {(!src || errored) && (
+        <>
+          <div className="card-placeholder-glyph" style={{color: fallbackColor}}>{fallbackGlyph}</div>
+          <div className="card-placeholder-label">card image</div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function InfoPanel({ card }) {
+  if (!card) return (
+    <div className="panel">
+      <div className="panel-logo">Thoth Tarot · Zodiacal Wheel</div>
+      <div className="panel-empty">
+        <div className="panel-empty-glyph">✦</div>
+        <div className="panel-empty-text">Hover or click<br/>any card to explore</div>
+      </div>
+      <LegendBlock/>
+    </div>
+  );
+
+  const typeLabel = card.type === 'minor' ? 'Minor Arcana' :
+    card.type === 'major-zodiac' ? 'Major Arcana · Zodiac' :
+    card.type === 'major-planet' ? 'Major Arcana · Planet' :
+    card.type === 'major-elemental' ? 'Major Arcana · Element' :
+    card.type === 'court' ? `Court Card · ${card.rank}` :
+    card.type === 'ace' ? 'Minor Arcana · Ace' :
+    'Card';
+
+  const typeColor = card.type === 'minor' ? (SC[card.suit] || '#c9a961')
+    : card.type === 'major-zodiac' ? (EC[SIGNS[card.sign]?.element]?.accent || '#c9a961')
+    : card.type === 'major-planet' ? '#c9a961'
+    : card.type === 'major-elemental' ? (card.elemColor || '#c9a961')
+    : (card.suit ? SC[card.suit] : '#c9a961');
+
+  // Card placeholder glyph
+  const glyph = card.type === 'minor' ? card.planet
+    : card.type === 'major-zodiac' ? SIGNS[card.sign].symbol
+    : card.type === 'major-planet' ? card.planet
+    : card.type === 'major-elemental' ? card.planet
+    : card.type === 'court' ? (card.rank === 'Knight' ? '♞' : card.rank === 'Queen' ? '♛' : card.rank === 'Prince' ? '♜' : '◈')
+    : card.type === 'ace' ? '✦' : '✦';
+
+  return (
+    <div className="panel">
+      <div className="panel-logo">Thoth Tarot · Zodiacal Wheel</div>
+
+      {/* Type badge */}
+      <div><span className="card-type-badge" style={{color: typeColor, borderColor: `${typeColor}60`}}>{typeLabel}</span></div>
+
+      {/* Card image (actual file if available, fallback to glyph) */}
+      <CardImage card={card} fallbackGlyph={glyph} fallbackColor={typeColor}/>
+
+      {/* Number and name */}
+      <div className="card-number-name">
+        <div className="card-roman">{card.roman || card.num}</div>
+        <div className="card-name" style={{color: typeColor}}>{card.name}</div>
+      </div>
+
+      {/* Details grid */}
+      {card.type === 'minor' && (
+        <div className="detail-grid">
+          <DetailRow label="Suit" value={card.suit}/>
+          <DetailRow label="Number" value={card.num} mono/>
+          <DetailRow label="Sign" value={SIGNS[card.sign].name}/>
+          <DetailRow label="Element" value={SIGNS[card.sign].element}/>
+          <DetailRow label="Decan" value={`${card.sign*30+card.decan*10}°–${card.sign*30+card.decan*10+10}°`} mono/>
+          <DetailRow label="Planet" value={`${card.planet} ${card.planetName}`}/>
+          <DetailRow label="Modality" value={SIGNS[card.sign].modality}/>
+          <DetailRow label="Sign Ruler" value={SIGNS[card.sign].ruler}/>
+        </div>
+      )}
+
+      {card.type === 'major-zodiac' && (
+        <>
+          <div className="detail-grid">
+            <DetailRow label="Sign" value={<><span className="zodiac-symbol">{SIGNS[card.sign].symbol}</span> {SIGNS[card.sign].name}</>}/>
+            <DetailRow label="Element" value={SIGNS[card.sign].element}/>
+            <DetailRow label="Modality" value={SIGNS[card.sign].modality}/>
+            <DetailRow label="Ruler" value={SIGNS[card.sign].ruler}/>
+            <DetailRow label="Path Type" value={card.path} wide/>
+          </div>
+          <div className="divider"/>
+          <HebrewBlock card={card}/>
+        </>
+      )}
+
+      {card.type === 'major-planet' && (
+        <>
+          <div className="detail-grid">
+            <DetailRow label="Planet" value={`${card.planet} ${card.planetName}`}/>
+            <DetailRow label="Path Type" value={card.path}/>
+          </div>
+          <div className="divider"/>
+          <HebrewBlock card={card}/>
+        </>
+      )}
+
+      {card.type === 'major-elemental' && (
+        <>
+          <div className="detail-grid">
+            <DetailRow label="Element" value={card.element}/>
+            <DetailRow label="Planet" value={`${card.planet} ${card.planetName}`}/>
+            <DetailRow label="Path Type" value={card.path} wide/>
+          </div>
+          <div className="divider"/>
+          <HebrewBlock card={card}/>
+        </>
+      )}
+
+      {card.type === 'court' && (
+        <div className="detail-grid">
+          <DetailRow label="Rank" value={card.rank}/>
+          <DetailRow label="Suit" value={card.suit}/>
+          <DetailRow label="Degrees" value={card.rank === 'Princess' ? `${card.a1}°–${card.a2}° (90°)` : `${card.a1}°–${card.a2 < card.a1 ? card.a2 + 360 : card.a2}°`} mono/>
+          <DetailRow label="Element" value={card.element}/>
+          {card.desc && <DetailRow label={card.rank === 'Princess' ? 'Quadrant (3 Signs)' : 'Element Type'} value={card.desc} wide/>}
+          {card.rank === 'Princess' && <DetailRow label="Attribution" value="Spatial (not zodiacal)" wide/>}
+        </div>
+      )}
+
+      {card.type === 'ace' && (
+        <div className="detail-grid">
+          <DetailRow label="Suit" value={card.suit}/>
+          <DetailRow label="Number" value="I" mono/>
+          <DetailRow label="Element" value={card.element}/>
+          <DetailRow label="Placement" value="Cardinal Axis"/>
+          <DetailRow label="Meaning" value={card.desc} wide/>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HebrewBlock({ card }) {
+  return (
+    <div className="hebrew-block">
+      <div className="hebrew-glyph">{card.hebrew}</div>
+      <div className="hebrew-label">{card.hebrewName}</div>
+      <div className="path-badge">{card.path}</div>
+    </div>
+  );
+}
+
+function LegendBlock() {
+  return (
+    <div style={{marginTop:'auto', paddingTop:16, borderTop:'1px solid var(--border)'}}>
+      <div style={{fontSize:7, letterSpacing:3, fontFamily:'JetBrains Mono,monospace', color:'var(--gold-dim)', marginBottom:10, textTransform:'uppercase'}}>Elements</div>
+      {Object.entries(EC).map(([el, c]) => (
+        <div key={el} style={{display:'flex', alignItems:'center', gap:8, marginBottom:6}}>
+          <div style={{width:8, height:8, borderRadius:'50%', background:c.accent, flexShrink:0}}/>
+          <div style={{fontSize:11, fontStyle:'italic', color:'rgba(201,169,97,0.7)'}}>{el}</div>
+        </div>
+      ))}
+      <div style={{marginTop:14, fontSize:7, letterSpacing:3, fontFamily:'JetBrains Mono,monospace', color:'var(--gold-dim)', marginBottom:10, textTransform:'uppercase'}}>Suits</div>
+      {Object.entries(SC).map(([suit, col]) => (
+        <div key={suit} style={{display:'flex', alignItems:'center', gap:8, marginBottom:6}}>
+          <div style={{width:8, height:8, borderRadius:'50%', background:col, flexShrink:0}}/>
+          <div style={{fontSize:11, fontStyle:'italic', color:'rgba(201,169,97,0.7)'}}>{suit}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── TWEAKS ─────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "showDecans": true,
+  "showZodiacMajor": false,
+  "showPlanetary": true,
+  "showElemental": true,
+  "showCourt": true,
+  "showAces": true,
+  "accentMode": "gold"
+}/*EDITMODE-END*/;
+
+function TweaksPanel({ tweaks, setTweaks, visible }) {
+  const toggle = key => setTweaks(t => ({...t, [key]: !t[key]}));
+  const TBtn = ({k, label}) => (
+    <button className={`tweak-btn ${tweaks[k] ? 'active' : ''}`} onClick={() => toggle(k)}>{label}</button>
+  );
+  return (
+    <div className={`tweaks-panel ${visible ? 'visible' : ''}`}>
+      <div className="tweaks-title">Tweaks</div>
+      <div className="tweak-row">
+        <div className="tweak-label">Rings visible</div>
+        <div className="tweak-toggle-group">
+          <TBtn k="showAces" label="Aces"/>
+          <TBtn k="showCourt" label="Court"/>
+          <TBtn k="showDecans" label="Decans"/>
+          <TBtn k="showZodiacMajor" label="Zodiac Maj"/>
+          <TBtn k="showPlanetary" label="Planets"/>
+          <TBtn k="showElemental" label="Elements"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── APP ────────────────────────────────────────────────
+function App() {
+  const [selected, setSelected] = useState(null);
+  const [hovered, setHovered] = useState(null);
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+  const active = selected || hovered;
+
+  // ── Zoom & Pan ────────────────────────────────────────
+  const BASE_VB = { x: -55, y: -55, w: 970, h: 970 };
+  const [vb, setVb] = useState(BASE_VB);
+  const svgRef = useRef(null);
+  const panState = useRef({ active: false, startX: 0, startY: 0, startVb: null });
+
+  const resetView = () => setVb(BASE_VB);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+
+    // macOS trackpad: pinch gesture sets ctrlKey=true; two-finger scroll has ctrlKey=false
+    // Mouse wheel typically has larger deltaY and no ctrlKey — treat as zoom
+    const isPinch = e.ctrlKey;
+    const isTwoFingerScroll = !e.ctrlKey && Math.abs(e.deltaY) < 50 && Math.abs(e.deltaX) < 50;
+
+    if (isTwoFingerScroll) {
+      // PAN: move the viewBox in the opposite direction of the scroll
+      const dx = e.deltaX / rect.width * vb.w;
+      const dy = e.deltaY / rect.height * vb.h;
+      setVb({ x: vb.x + dx, y: vb.y + dy, w: vb.w, h: vb.h });
+      return;
+    }
+
+    // ZOOM (pinch or mouse wheel): zoom toward cursor position
+    const mx = ((e.clientX - rect.left) / rect.width) * vb.w + vb.x;
+    const my = ((e.clientY - rect.top) / rect.height) * vb.h + vb.y;
+    // Pinch zoom is more sensitive (smaller factor), wheel zoom is coarser
+    const factor = isPinch ? 0.02 : 0.18;
+    const zoom = e.deltaY < 0 ? (1 - factor) : (1 + factor);
+    let newW = vb.w * zoom;
+    let newH = vb.h * zoom;
+    const minW = BASE_VB.w * 0.15;
+    const maxW = BASE_VB.w * 1.6;
+    if (newW < minW) { newW = minW; newH = BASE_VB.h * 0.15; }
+    if (newW > maxW) { newW = maxW; newH = BASE_VB.h * 1.6; }
+    const newX = mx - ((e.clientX - rect.left) / rect.width) * newW;
+    const newY = my - ((e.clientY - rect.top) / rect.height) * newH;
+    setVb({ x: newX, y: newY, w: newW, h: newH });
+  };
+
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    // Start pan unless clicking directly on an interactive element
+    // (anything inside a <g> with cursor:pointer — cards, markers, wedges)
+    const interactive = e.target.closest('g[style*="cursor"]');
+    if (!interactive) {
+      panState.current = { active: true, startX: e.clientX, startY: e.clientY, startVb: vb };
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!panState.current.active) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const dx = (e.clientX - panState.current.startX) / rect.width * panState.current.startVb.w;
+    const dy = (e.clientY - panState.current.startY) / rect.height * panState.current.startVb.h;
+    setVb({
+      x: panState.current.startVb.x - dx,
+      y: panState.current.startVb.y - dy,
+      w: panState.current.startVb.w,
+      h: panState.current.startVb.h,
+    });
+  };
+
+  const handleMouseUp = () => { panState.current.active = false; };
+
+  // Touch handlers (pinch zoom + drag pan)
+  const touchState = useRef({ mode: null, startDist: 0, startVb: null, startX: 0, startY: 0, center: null });
+
+  const getTouchDist = (t) => {
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    if (e.touches.length === 2) {
+      const rect = svg.getBoundingClientRect();
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      touchState.current = {
+        mode: 'pinch',
+        startDist: getTouchDist(e.touches),
+        startVb: vb,
+        center: { x: cx - rect.left, y: cy - rect.top, rectW: rect.width, rectH: rect.height },
+      };
+    } else if (e.touches.length === 1) {
+      const interactive = e.target.closest('g[style*="cursor"]');
+      if (!interactive) {
+        touchState.current = {
+          mode: 'pan',
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          startVb: vb,
+        };
+      }
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    if (touchState.current.mode === 'pinch' && e.touches.length === 2) {
+      e.preventDefault();
+      const newDist = getTouchDist(e.touches);
+      const scale = touchState.current.startDist / newDist;
+      const sVb = touchState.current.startVb;
+      const c = touchState.current.center;
+      let newW = sVb.w * scale;
+      let newH = sVb.h * scale;
+      const minW = BASE_VB.w * 0.15;
+      const maxW = BASE_VB.w * 1.6;
+      if (newW < minW) { newW = minW; newH = BASE_VB.h * 0.15; }
+      if (newW > maxW) { newW = maxW; newH = BASE_VB.h * 1.6; }
+      const mx = (c.x / c.rectW) * sVb.w + sVb.x;
+      const my = (c.y / c.rectH) * sVb.h + sVb.y;
+      const newX = mx - (c.x / c.rectW) * newW;
+      const newY = my - (c.y / c.rectH) * newH;
+      setVb({ x: newX, y: newY, w: newW, h: newH });
+    } else if (touchState.current.mode === 'pan' && e.touches.length === 1) {
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const sVb = touchState.current.startVb;
+      const dx = (e.touches[0].clientX - touchState.current.startX) / rect.width * sVb.w;
+      const dy = (e.touches[0].clientY - touchState.current.startY) / rect.height * sVb.h;
+      setVb({ x: sVb.x - dx, y: sVb.y - dy, w: sVb.w, h: sVb.h });
+    }
+  };
+
+  const handleTouchEnd = () => { touchState.current = { mode: null }; };
+
+  // Attach non-passive wheel listener so preventDefault works
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const wheelHandler = (e) => handleWheel(e);
+    svg.addEventListener('wheel', wheelHandler, { passive: false });
+    svg.addEventListener('touchstart', handleTouchStart, { passive: false });
+    svg.addEventListener('touchmove', handleTouchMove, { passive: false });
+    svg.addEventListener('touchend', handleTouchEnd);
+    return () => {
+      svg.removeEventListener('wheel', wheelHandler);
+      svg.removeEventListener('touchstart', handleTouchStart);
+      svg.removeEventListener('touchmove', handleTouchMove);
+      svg.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [vb]);
+
+  // Global mouse up to end panning even if released outside svg
+  useEffect(() => {
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  // Register tweaks with host
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    });
+    window.parent.postMessage({type:'__edit_mode_available'}, '*');
+  }, []);
+
+  useEffect(() => {
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits: tweaks}, '*');
+  }, [tweaks]);
+
+  const handleHover = (card) => {
+    if (panState.current.active || touchState.current.mode) return;
+    if (!selected) setHovered(card); else setHovered(null);
+  };
+  const handleClick = (updater) => {
+    setSelected(typeof updater === 'function' ? updater : updater);
+    setHovered(null);
+  };
+
+  return (
+    <div className="layout">
+      <div className="wheel-wrap" style={{position:'relative'}}>
+        <svg
+          ref={svgRef}
+          viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+          className="wheel-svg"
+          style={{overflow:'visible', cursor: panState.current.active ? 'grabbing' : 'grab', touchAction: 'none'}}
+          onMouseDown={handleMouseDown}>
+          <Defs/>
+          {/* Invisible pan-catcher background (huge rect) */}
+          <rect className="pan-bg" x="-2000" y="-2000" width="4860" height="4860" fill="transparent"/>
+          <g opacity="0.7">
+            {STARS.map((s,i) => <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="white" opacity={s.o}/>)}
+          </g>
+          <circle cx={CX} cy={CY} r={240} fill="url(#cg)"/>
+          <circle cx={CX} cy={CY} r={420} fill="url(#hg)"/>
+          {tweaks.showAces && <AceMarkers active={active} onHover={handleHover} onClick={handleClick}/>}
+          {tweaks.showCourt && <CourtRing active={active} onHover={handleHover} onClick={handleClick}/>}
+          <ZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>
+          {tweaks.showDecans && <DecanRing active={active} onHover={handleHover} onClick={handleClick}/>}
+          {tweaks.showZodiacMajor && <MajorZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>}
+          {tweaks.showPlanetary && <Heptagram active={active} onHover={handleHover} onClick={handleClick}/>}
+          {tweaks.showElemental && <ElementalTriangle active={active} onHover={handleHover} onClick={handleClick}/>}
+          <circle cx={CX} cy={CY} r={16} fill="none" stroke="rgba(201,169,97,0.2)" strokeWidth="0.7"/>
+          <circle cx={CX} cy={CY} r={6} fill="rgba(201,169,97,0.12)" stroke="rgba(201,169,97,0.45)" strokeWidth="0.7"/>
+        </svg>
+        <div className="zoom-controls">
+          <button className="zoom-btn" onClick={() => {
+            const cx = vb.x + vb.w/2, cy = vb.y + vb.h/2;
+            const newW = vb.w * 0.75, newH = vb.h * 0.75;
+            const minW = BASE_VB.w * 0.15;
+            if (newW < minW) return;
+            setVb({ x: cx - newW/2, y: cy - newH/2, w: newW, h: newH });
+          }} title="Zoom in">+</button>
+          <button className="zoom-btn" onClick={() => {
+            const cx = vb.x + vb.w/2, cy = vb.y + vb.h/2;
+            const newW = vb.w * 1.33, newH = vb.h * 1.33;
+            const maxW = BASE_VB.w * 1.6;
+            if (newW > maxW) return;
+            setVb({ x: cx - newW/2, y: cy - newH/2, w: newW, h: newH });
+          }} title="Zoom out">−</button>
+          <button className="zoom-btn zoom-btn-reset" onClick={resetView} title="Reset">⟲</button>
+        </div>
+      </div>
+      <InfoPanel card={active}/>
+      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
