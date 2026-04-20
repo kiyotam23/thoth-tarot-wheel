@@ -252,10 +252,115 @@ body {
   margin-right: 5px;
   vertical-align: middle;
 }
+.mobile-sheet-handle-wrap,
+.mobile-sheet-actions,
+.mobile-backdrop {
+  display: none;
+}
 @media (max-width: 820px) {
-  .layout { flex-direction: column; overflow-y: auto; }
-  .wheel-wrap { height: 60vw; min-height: 300px; flex: none; padding: 8px; }
-  .panel { width: 100%; height: auto; min-height: 0; border-left: none; border-top: 1px solid var(--border); overflow-y: visible; }
+  html, body, #root { overflow: hidden; }
+  .layout {
+    position: relative;
+    display: block;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .wheel-wrap {
+    position: absolute;
+    inset: 0;
+    padding: 8px;
+    z-index: 1;
+  }
+  .layout.mobile-sheet-open .wheel-wrap {
+    pointer-events: none;
+  }
+  .layout.mobile-sheet-open .zoom-controls {
+    opacity: 0.45;
+  }
+  .mobile-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    border: 0;
+    background: linear-gradient(to top, rgba(10,7,16,0.42), rgba(10,7,16,0));
+  }
+  .panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    background: rgba(10,7,16,0.98);
+    backdrop-filter: blur(12px);
+    z-index: 5;
+    max-height: calc(100dvh - 10px);
+    transform: translateY(var(--sheet-offset, 0px));
+    transition: transform 240ms ease;
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 18px calc(22px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    height: var(--sheet-height, 40dvh);
+  }
+  .panel.sheet-closed {
+    --sheet-height: 40dvh;
+    --sheet-offset: calc(100% + 22px);
+    pointer-events: none;
+  }
+  .panel.sheet-peek {
+    --sheet-height: 40dvh;
+  }
+  .panel.sheet-full {
+    --sheet-height: calc(100dvh - 8px);
+  }
+  .mobile-sheet-handle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -4px 0 10px;
+    flex-shrink: 0;
+    touch-action: none;
+  }
+  .mobile-sheet-handle {
+    width: 42px;
+    height: 4px;
+    border-radius: 3px;
+    background: rgba(201,169,97,0.55);
+  }
+  .mobile-sheet-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .mobile-sheet-btn {
+    border: 1px solid var(--border);
+    background: rgba(10,7,16,0.75);
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 8px;
+    border-radius: 999px;
+  }
+  .panel-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+  .card-name {
+    font-size: 24px;
+  }
+  .detail-value {
+    font-size: 15px;
+  }
 }
 /* Tweaks panel */
 .tweaks-panel {
@@ -1069,9 +1174,10 @@ function CardImage({ card, fallbackGlyph, fallbackColor }) {
   );
 }
 
-function InfoPanel({ card }) {
+function InfoPanel({ card, className = '', style, headerSlot = null }) {
   if (!card) return (
-    <div className="panel">
+    <div className={`panel ${className}`.trim()} style={style}>
+      {headerSlot}
       <div className="panel-logo">Thoth Tarot · Zodiacal Wheel</div>
       <div className="panel-empty">
         <div className="panel-empty-glyph">✦</div>
@@ -1104,7 +1210,8 @@ function InfoPanel({ card }) {
     : card.type === 'ace' ? '✦' : '✦';
 
   return (
-    <div className="panel">
+    <div className={`panel ${className}`.trim()} style={style}>
+      {headerSlot}
       <div className="panel-logo">Thoth Tarot · Zodiacal Wheel</div>
 
       {/* Type badge */}
@@ -1265,6 +1372,10 @@ function App() {
   const [hovered, setHovered] = useState(null);
   const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
   const [tweaksVisible, setTweaksVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 820px)').matches);
+  const [sheetState, setSheetState] = useState('closed'); // closed | peek | full
+  const [sheetDragOffset, setSheetDragOffset] = useState(0);
+  const sheetDragRef = useRef({ active: false, startY: 0, stateAtStart: 'closed' });
   const active = selected || hovered;
 
   // ── Zoom & Pan ────────────────────────────────────────
@@ -1274,6 +1385,15 @@ function App() {
   const panState = useRef({ active: false, startX: 0, startY: 0, startVb: null });
 
   const resetView = () => setVb(BASE_VB);
+  const closeSheet = () => {
+    setSheetState('closed');
+    setSheetDragOffset(0);
+  };
+  const expandSheet = () => {
+    if (!selected) return;
+    setSheetState('full');
+    setSheetDragOffset(0);
+  };
 
   const handleWheel = (e) => {
     e.preventDefault();
@@ -1446,17 +1566,110 @@ function App() {
     window.parent.postMessage({type:'__edit_mode_set_keys', edits: tweaks}, '*');
   }, [tweaks]);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 820px)');
+    const onChange = (e) => setIsMobile(e.matches);
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      else mq.removeListener(onChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setSheetState('closed');
+      setSheetDragOffset(0);
+      return;
+    }
+    if (!selected) {
+      setSheetState('closed');
+      setSheetDragOffset(0);
+      return;
+    }
+    if (sheetState === 'closed') {
+      setSheetState('peek');
+      setSheetDragOffset(0);
+    }
+  }, [isMobile, selected, sheetState]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const onEsc = (e) => {
+      if (e.key !== 'Escape') return;
+      if (sheetState === 'full') setSheetState('peek');
+      else if (sheetState === 'peek') closeSheet();
+    };
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, [isMobile, sheetState]);
+
   const handleHover = (card) => {
+    if (isMobile) return;
     if (panState.current.active || touchState.current.mode) return;
     if (!selected) setHovered(card); else setHovered(null);
   };
   const handleClick = (updater) => {
-    setSelected(typeof updater === 'function' ? updater : updater);
+    const nextSelected = typeof updater === 'function' ? updater(selected) : updater;
+    setSelected(nextSelected);
     setHovered(null);
+    if (isMobile) {
+      if (nextSelected) setSheetState('peek');
+      else closeSheet();
+    }
   };
 
+  const handleSheetTouchStart = (e) => {
+    if (!isMobile || !selected) return;
+    if (e.touches.length !== 1) return;
+    sheetDragRef.current = {
+      active: true,
+      startY: e.touches[0].clientY,
+      stateAtStart: sheetState,
+    };
+    setSheetDragOffset(0);
+  };
+
+  const handleSheetTouchMove = (e) => {
+    if (!sheetDragRef.current.active) return;
+    const deltaY = e.touches[0].clientY - sheetDragRef.current.startY;
+    const isDraggingDown = deltaY > 0;
+    const isDraggingUp = deltaY < 0;
+    const canDrag =
+      (sheetDragRef.current.stateAtStart === 'full' && isDraggingDown) ||
+      (sheetDragRef.current.stateAtStart === 'peek' && (isDraggingDown || isDraggingUp));
+    if (!canDrag) return;
+    e.preventDefault();
+    const limited = Math.max(-180, Math.min(260, deltaY));
+    setSheetDragOffset(limited);
+  };
+
+  const handleSheetTouchEnd = () => {
+    if (!sheetDragRef.current.active) return;
+    const { stateAtStart } = sheetDragRef.current;
+    const deltaY = sheetDragOffset;
+    sheetDragRef.current.active = false;
+    setSheetDragOffset(0);
+    if (stateAtStart === 'full') {
+      if (deltaY > 120) setSheetState('peek');
+      return;
+    }
+    if (stateAtStart === 'peek') {
+      if (deltaY > 140) closeSheet();
+      else if (deltaY < -90) setSheetState('full');
+    }
+  };
+
+  const mobileSheetClass = isMobile
+    ? (sheetState === 'full' ? 'sheet-full' : sheetState === 'peek' ? 'sheet-peek' : 'sheet-closed')
+    : '';
+  const panelStyle = isMobile && sheetState !== 'closed'
+    ? { transform: `translateY(${Math.max(0, sheetDragOffset)}px)` }
+    : undefined;
+
   return (
-    <div className="layout">
+    <div className={`layout ${isMobile && sheetState !== 'closed' ? 'mobile-sheet-open' : ''}`}>
       <div className="wheel-wrap" style={{position:'relative'}}>
         <svg
           ref={svgRef}
@@ -1500,7 +1713,37 @@ function App() {
           <button className="zoom-btn zoom-btn-reset" onClick={resetView} title="Reset">⟲</button>
         </div>
       </div>
-      <InfoPanel card={active}/>
+      {isMobile && sheetState !== 'closed' && (
+        <button
+          className="mobile-backdrop"
+          aria-label="Close card details"
+          onClick={closeSheet}
+        />
+      )}
+      {isMobile && (
+        <InfoPanel
+          card={active}
+          className={mobileSheetClass}
+          style={panelStyle}
+          headerSlot={(
+            <div
+              className="mobile-sheet-handle-wrap"
+              onTouchStart={handleSheetTouchStart}
+              onTouchMove={handleSheetTouchMove}
+              onTouchEnd={handleSheetTouchEnd}
+            >
+              <div className="mobile-sheet-handle" />
+              <div className="mobile-sheet-actions">
+                {sheetState === 'peek' && selected && (
+                  <button className="mobile-sheet-btn" onClick={expandSheet}>Full</button>
+                )}
+                {selected && <button className="mobile-sheet-btn" onClick={closeSheet}>Close</button>}
+              </div>
+            </div>
+          )}
+        />
+      )}
+      {!isMobile && <InfoPanel card={active} />}
       <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible}/>
     </div>
   );
