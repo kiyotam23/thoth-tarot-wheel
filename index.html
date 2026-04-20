@@ -549,6 +549,7 @@ const EC = {
 };
 
 const SC = { Wands:'#e07858', Cups:'#6090e8', Swords:'#d4c040', Disks:'#60c070' };
+const ELEMENT_SYMBOL = { Fire:'🜂', Water:'🜄', Air:'🜁', Earth:'🜃' };
 
 const MINOR = [
   {id:'m0',  sign:0, decan:0, suit:'Wands',  num:2,  roman:'II',   name:'Dominion',      planet:'♂', planetName:'Mars'},
@@ -636,21 +637,22 @@ const COURT_KQP = [
   {id:'c11', rank:'Knight', suit:'Cups',   a1:320, a2:350, mid:335, element:'Fire of Water'},
 ];
 
-// Princesses: NO zodiacal attribution — each rules a full 90° quadrant (3 signs)
-// centered on the fixed sign of their element (Book of Thoth, Crowley)
+// Princesses: each maps to a 90° elemental quadrant (3 signs)
+// Fire(Wands): Aries-Taurus-Gemini / Water(Cups): Cancer-Leo-Virgo
+// Earth(Disks): Libra-Scorpio-Sagittarius / Air(Swords): Capricorn-Aquarius-Pisces
 const COURT_PS = [
-  {id:'ps0', rank:'Princess', suit:'Disks',  a1:0,   a2:90,  mid:45,  element:'Earth of Earth', desc:'Aries · Taurus · Gemini'},
-  {id:'ps1', rank:'Princess', suit:'Wands',  a1:90,  a2:180, mid:135, element:'Earth of Fire',  desc:'Cancer · Leo · Virgo'},
-  {id:'ps2', rank:'Princess', suit:'Cups',   a1:180, a2:270, mid:225, element:'Earth of Water', desc:'Libra · Scorpio · Sagittarius'},
+  {id:'ps0', rank:'Princess', suit:'Wands',  a1:0,   a2:90,  mid:45,  element:'Earth of Fire',  desc:'Aries · Taurus · Gemini'},
+  {id:'ps1', rank:'Princess', suit:'Cups',   a1:90,  a2:180, mid:135, element:'Earth of Water', desc:'Cancer · Leo · Virgo'},
+  {id:'ps2', rank:'Princess', suit:'Disks',  a1:180, a2:270, mid:225, element:'Earth of Earth', desc:'Libra · Scorpio · Sagittarius'},
   {id:'ps3', rank:'Princess', suit:'Swords', a1:270, a2:360, mid:315, element:'Earth of Air',   desc:'Capricorn · Aquarius · Pisces'},
 ];
 
 // Aces: placed at the midpoint of each Princess quadrant (fixed sign center)
-// Disks=45° (Taurus), Wands=135° (Leo), Cups=225° (Scorpio), Swords=315° (Aquarius)
+// Wands=45° (Taurus), Cups=135° (Leo), Disks=225° (Scorpio), Swords=315° (Aquarius)
 const ACES = [
-  {id:'a0', suit:'Disks',  roman:'I', name:'Ace of Disks',  element:'Earth', angle:45,  desc:'Root of the Powers of Earth'},
-  {id:'a1', suit:'Wands',  roman:'I', name:'Ace of Wands',  element:'Fire',  angle:135, desc:'Root of the Powers of Fire'},
-  {id:'a2', suit:'Cups',   roman:'I', name:'Ace of Cups',   element:'Water', angle:225, desc:'Root of the Powers of Water'},
+  {id:'a0', suit:'Wands',  roman:'I', name:'Ace of Wands',  element:'Fire',  angle:45,  desc:'Root of the Powers of Fire'},
+  {id:'a1', suit:'Cups',   roman:'I', name:'Ace of Cups',   element:'Water', angle:135, desc:'Root of the Powers of Water'},
+  {id:'a2', suit:'Disks',  roman:'I', name:'Ace of Disks',  element:'Earth', angle:225, desc:'Root of the Powers of Earth'},
   {id:'a3', suit:'Swords', roman:'I', name:'Ace of Swords', element:'Air',   angle:315, desc:'Root of the Powers of Air'},
 ];
 
@@ -1116,41 +1118,58 @@ function CourtRing({ active, onHover, onClick }) {
   );
 }
 
-// ── ACE MARKERS ────────────────────────────────────────
-const RA = 466;
+// ── ACE RING (90° QUADRANTS) ───────────────────────────
+const RA_O = 502, RA_I = 470;
 
 function AceMarkers({ active, onHover, onClick }) {
   return (
     <g>
       {ACES.map(card => {
-        const [x, y] = polar(RA, card.angle);
+        const quad = COURT_PS.find(ps => ps.suit === card.suit);
+        if (!quad) return null;
+        const a2 = quad.a2 <= quad.a1 ? quad.a2 + 360 : quad.a2;
+        const mid = quad.mid;
+        const [x, y] = polar((RA_O + RA_I) / 2, mid);
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
+        const rot = minorLikeTextRotation(mid);
+        const elementSymbol = ELEMENT_SYMBOL[card.element] || '✦';
         return (
           <g key={card.id} style={{cursor:'pointer'}}
             onMouseEnter={() => onHover({...card, type:'ace'})}
             onMouseLeave={() => onHover(null)}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'ace'})}>
-            {isHov && <circle cx={x} cy={y} r={21} fill={sc} opacity="0.14" filter="url(#glow3)"/>}
-            {/* Diamond */}
-            <rect x={x-11} y={y-11} width="22" height="22"
-              transform={`rotate(45,${x},${y})`}
-              fill={isHov ? `${sc}28` : 'rgba(10,7,16,0.92)'}
-              stroke={isHov ? sc : sc}
-              strokeWidth={isHov ? '1.4' : '1'}
+            <path
+              d={arc(RA_I, RA_O, quad.a1, a2)}
+              fill={isHov ? `${sc}24` : `${sc}10`}
+              stroke={isHov ? sc : `${sc}70`}
+              strokeWidth={isHov ? '0.9' : '0.5'}
+              strokeDasharray={isHov ? undefined : '2.5 2'}
               filter={isHov ? 'url(#glow2)' : undefined}
-              style={{transition:'all 0.25s'}}/>
-            <text x={x} y={y+0.5} textAnchor="middle" dominantBaseline="middle"
-              fontSize="11" fontFamily="'Inter', sans-serif"
-              fontWeight="600"
-              fill={isHov ? sc : sc}
-              filter={isHov ? 'url(#glow2)' : undefined}
-              style={{userSelect:'none',pointerEvents:'none',transition:'all 0.25s'}}>
-              I
-            </text>
+              style={{transition:'all 0.2s'}}
+            />
+            <g transform={`rotate(${rot},${x},${y})`} style={{pointerEvents:'none'}}>
+              <text x={x} y={y-2} textAnchor="middle" dominantBaseline="middle"
+                fontSize="16" fontFamily="'Inter', sans-serif"
+                fontWeight="500"
+                fill={isHov ? sc : `${sc}e0`}
+                filter={isHov ? 'url(#glow2)' : undefined}
+                style={{userSelect:'none', transition:'all 0.25s'}}>
+                {elementSymbol}
+              </text>
+              <text x={x} y={y+11} textAnchor="middle" dominantBaseline="middle"
+                fontSize="7.2" fontFamily="'Inter', sans-serif" fontStyle="italic"
+                fontWeight="500"
+                fill={isHov ? sc : `${sc}cc`}
+                style={{userSelect:'none', transition:'all 0.25s'}}>
+                {card.name}
+              </text>
+            </g>
           </g>
         );
       })}
+      <circle cx={CX} cy={CY} r={RA_O} fill="none" stroke="rgba(201,169,97,0.16)" strokeWidth="0.55"/>
+      <circle cx={CX} cy={CY} r={RA_I} fill="none" stroke="rgba(201,169,97,0.10)" strokeWidth="0.4" strokeDasharray="2 3"/>
     </g>
   );
 }
