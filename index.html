@@ -558,6 +558,9 @@ body {
   margin-top: 4px;
   border-color: var(--gold-dim);
 }
+.rotating-group {
+  transition: transform 260ms ease;
+}
 .rotate-group-label {
   font-size: 8px;
   letter-spacing: 1px;
@@ -597,6 +600,7 @@ const { useState, useMemo, useEffect, useRef } = React;
 
 // ── CONSTANTS ──────────────────────────────────────────
 const CX = 0, CY = 0;
+const PLANET_STEP_DEG = 360 / 7;
 
 // ── DATA ───────────────────────────────────────────────
 const SIGNS = [
@@ -1750,16 +1754,16 @@ function App() {
           </g>
           <circle cx={CX} cy={CY} r={240} fill="url(#cg)"/>
           <circle cx={CX} cy={CY} r={420} fill="url(#hg)"/>
-          <g transform={`rotate(${zodiacRotation}, ${CX}, ${CY})`}>
+          <g className="rotating-group" transform={`rotate(${zodiacRotation}, ${CX}, ${CY})`}>
             {tweaks.showCourt && <CourtRing active={active} onHover={handleHover} onClick={handleClick}/>}
             <ZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>
             {tweaks.showDecans && <DecanRing active={active} onHover={handleHover} onClick={handleClick}/>}
             {tweaks.showZodiacMajor && <MajorZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>}
           </g>
-          <g transform={`rotate(${aceRotation}, ${CX}, ${CY})`}>
+          <g className="rotating-group" transform={`rotate(${aceRotation}, ${CX}, ${CY})`}>
             {tweaks.showAces && <AceMarkers active={active} onHover={handleHover} onClick={handleClick}/>}
           </g>
-          <g transform={`rotate(${planetaryRotation}, ${CX}, ${CY})`}>
+          <g className="rotating-group" transform={`rotate(${planetaryRotation}, ${CX}, ${CY})`}>
             {tweaks.showPlanetary && <Heptagram active={active} onHover={handleHover} onClick={handleClick}/>}
             {tweaks.showElemental && <ElementalTriangle active={active} onHover={handleHover} onClick={handleClick}/>}
           </g>
@@ -1782,25 +1786,25 @@ function App() {
           <div className="rotate-group-label">Aces</div>
           <button
             className="zoom-btn"
-            onClick={() => setAceRotation(r => r - 10)}
-            title="Rotate aces -10°"
+            onClick={() => setAceRotation(r => r - 90)}
+            title="Rotate aces -90°"
           >A↺</button>
           <button
             className="zoom-btn"
-            onClick={() => setAceRotation(r => r + 10)}
-            title="Rotate aces +10°"
+            onClick={() => setAceRotation(r => r + 90)}
+            title="Rotate aces +90°"
           >A↻</button>
           <button className="zoom-btn zoom-btn-reset" onClick={() => setAceRotation(0)} title="Reset ace rotation">A⟲</button>
           <div className="rotate-group-label">Planet</div>
           <button
             className="zoom-btn"
-            onClick={() => setPlanetaryRotation(r => r - 10)}
-            title="Rotate planetary -10°"
+            onClick={() => setPlanetaryRotation(r => r - PLANET_STEP_DEG)}
+            title="Rotate planetary -360/7°"
           >P↺</button>
           <button
             className="zoom-btn"
-            onClick={() => setPlanetaryRotation(r => r + 10)}
-            title="Rotate planetary +10°"
+            onClick={() => setPlanetaryRotation(r => r + PLANET_STEP_DEG)}
+            title="Rotate planetary +360/7°"
           >P↻</button>
           <button className="zoom-btn zoom-btn-reset" onClick={() => setPlanetaryRotation(0)} title="Reset planetary rotation">P⟲</button>
         </div>
