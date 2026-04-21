@@ -641,9 +641,9 @@ const COURT_KQP = [
 // Fire(Wands): Aries-Taurus-Gemini / Water(Cups): Cancer-Leo-Virgo
 // Earth(Disks): Libra-Scorpio-Sagittarius / Air(Swords): Capricorn-Aquarius-Pisces
 const COURT_PS = [
-  {id:'ps0', rank:'Princess', suit:'Wands',  a1:0,   a2:90,  mid:45,  element:'Earth of Fire',  desc:'Aries · Taurus · Gemini'},
-  {id:'ps1', rank:'Princess', suit:'Cups',   a1:90,  a2:180, mid:135, element:'Earth of Water', desc:'Cancer · Leo · Virgo'},
-  {id:'ps2', rank:'Princess', suit:'Disks',  a1:180, a2:270, mid:225, element:'Earth of Earth', desc:'Libra · Scorpio · Sagittarius'},
+  {id:'ps0', rank:'Princess', suit:'Disks',  a1:0,   a2:90,  mid:45,  element:'Earth of Earth', desc:'Aries · Taurus · Gemini'},
+  {id:'ps1', rank:'Princess', suit:'Wands',  a1:90,  a2:180, mid:135, element:'Earth of Fire',  desc:'Cancer · Leo · Virgo'},
+  {id:'ps2', rank:'Princess', suit:'Cups',   a1:180, a2:270, mid:225, element:'Earth of Water', desc:'Libra · Scorpio · Sagittarius'},
   {id:'ps3', rank:'Princess', suit:'Swords', a1:270, a2:360, mid:315, element:'Earth of Air',   desc:'Capricorn · Aquarius · Pisces'},
 ];
 
@@ -658,7 +658,8 @@ const ACES = [
 
 // ── HELPERS ────────────────────────────────────────────
 function polar(r, deg) {
-  const rad = (deg - 90) * Math.PI / 180;
+  // Counterclockwise zodiac flow with 0° at top.
+  const rad = (-deg - 90) * Math.PI / 180;
   return [CX + r * Math.cos(rad), CY + r * Math.sin(rad)];
 }
 
@@ -666,11 +667,12 @@ function arc(ri, ro, a1, a2) {
   const [x1,y1] = polar(ro, a1), [x2,y2] = polar(ro, a2);
   const [x3,y3] = polar(ri, a2), [x4,y4] = polar(ri, a1);
   const lg = (a2-a1) > 180 ? 1 : 0;
-  return `M${x1},${y1} A${ro},${ro},0,${lg},1,${x2},${y2} L${x3},${y3} A${ri},${ri},0,${lg},0,${x4},${y4} Z`;
+  return `M${x1},${y1} A${ro},${ro},0,${lg},0,${x2},${y2} L${x3},${y3} A${ri},${ri},0,${lg},1,${x4},${y4} Z`;
 }
 
-function minorLikeTextRotation(angleDeg) {
-  return angleDeg - 180;
+function radialOutwardTextRotation(angleDeg) {
+  // Fixed radial outward orientation (independent from runtime wheel rotation).
+  return -angleDeg - 180;
 }
 
 // ── STARS ──────────────────────────────────────────────
@@ -720,7 +722,7 @@ function ZodiacRing({ active, onHover, onClick }) {
         const a1 = i*30, a2 = a1+30, mid = a1+15;
         const ec = EC[sg.element];
         const isHov = active?.id === majorCard.id;
-        const rot = minorLikeTextRotation(mid);
+        const rot = radialOutwardTextRotation(mid);
         const majorInlineLabel = `${majorCard.roman} - ${majorCard.short.toUpperCase()}`;
         // three concentric positions inside the zodiac cell
         const [symX, symY] = polar((RZO + RZI) / 2 + 10, mid); // symbol — upper area
@@ -785,7 +787,7 @@ function DecanRing({ active, onHover, onClick }) {
         const mid = a1 + 5;
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const rot = minorLikeTextRotation(mid);
+        const rot = radialOutwardTextRotation(mid);
 
         // Text positions
         const [px, py] = polar((RDO+RDI)/2 + 28, mid);
@@ -974,6 +976,13 @@ const RHP = 152;
 
 function Heptagram({ active, onHover, onClick }) {
   const pts = MAJ_P.map((_, i) => polar(RHP, i * (360/7)));
+  // Clockwise order seen from outside:
+  // top Saturn, then Sun, Moon, Mercury, Jupiter, Mars, Venus.
+  const clockwiseVertices = [0, 6, 5, 4, 3, 2, 1];
+  const clockwisePlanets = ['♄', '☉', '☽', '☿', '♃', '♂', '♀'];
+  const orderedCards = clockwisePlanets
+    .map(symbol => MAJ_P.find(card => card.planet === symbol))
+    .filter(Boolean);
 
   // Draw heptagram lines
   const lines = [];
@@ -986,9 +995,10 @@ function Heptagram({ active, onHover, onClick }) {
   return (
     <g>
       {lines}
-      {MAJ_P.map((card, i) => {
-        const [x, y] = pts[i];
-        const angle = i * (360/7);
+      {orderedCards.map((card, i) => {
+        const vertex = clockwiseVertices[i];
+        const [x, y] = pts[vertex];
+        const angle = vertex * (360/7);
         return (
           <Marker key={card.id} x={x} y={y} r={27}
             roman={card.roman} glyph={card.planet} label={card.short}
@@ -996,7 +1006,7 @@ function Heptagram({ active, onHover, onClick }) {
             active={active?.id === card.id}
             onHover={(v) => onHover(v === null ? null : {...card, type:'major-planet'})}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-planet'})}
-            textRotation={minorLikeTextRotation(angle)}
+            textRotation={radialOutwardTextRotation(angle)}
             inlineMajorLabel
             id={card.id}/>
         );
@@ -1034,7 +1044,7 @@ function ElementalTriangle({ active, onHover, onClick }) {
             active={active?.id === card.id}
             onHover={(v) => onHover(v === null ? null : {...card, type:'major-elemental', elemColor: elemColors[i]})}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'major-elemental', elemColor: elemColors[i]})}
-            textRotation={minorLikeTextRotation(angle)}
+            textRotation={radialOutwardTextRotation(angle)}
             inlineMajorLabel
             id={card.id}/>
         );
@@ -1045,7 +1055,8 @@ function ElementalTriangle({ active, onHover, onClick }) {
 
 // ── COURT CARD RING ────────────────────────────────────
 const RKQP_O = 434, RKQP_I = 411; // Knights / Queens / Princes sub-ring
-const RPS_O  = 454, RPS_I  = 436; // Princesses sub-ring
+const RPS_O  = 454, RPS_I  = 434; // Princesses sub-ring (touches KQP outer edge)
+const WEDGE_EPS = 0.08; // tiny angular overlap to hide anti-alias seams
 
 function CourtRing({ active, onHover, onClick }) {
   return (
@@ -1055,17 +1066,16 @@ function CourtRing({ active, onHover, onClick }) {
         const a2 = card.a2 <= card.a1 ? card.a2 + 360 : card.a2;
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const rot = minorLikeTextRotation(card.mid);
+        const rot = radialOutwardTextRotation(card.mid);
         const [tx, ty] = polar(RKQP_I + 11, card.mid);
         return (
           <g key={card.id} style={{cursor:'pointer'}}
             onMouseEnter={() => onHover({...card, type:'court'})}
             onMouseLeave={() => onHover(null)}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'court'})}>
-            <path d={arc(RKQP_I, RKQP_O, card.a1, a2)}
+            <path d={arc(RKQP_I, RKQP_O, card.a1 - WEDGE_EPS, a2 + WEDGE_EPS)}
               fill={isHov ? `${sc}22` : `${sc}09`}
-              stroke={isHov ? sc : `${sc}50`}
-              strokeWidth={isHov ? '0.9' : '0.4'}
+              stroke="none"
               filter={isHov ? 'url(#glow2)' : undefined}
               style={{transition:'all 0.2s'}}/>
             <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
@@ -1085,18 +1095,16 @@ function CourtRing({ active, onHover, onClick }) {
         const a2 = card.a2 <= card.a1 ? card.a2 + 360 : card.a2;
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const rot = minorLikeTextRotation(card.mid);
+        const rot = radialOutwardTextRotation(card.mid);
         const [tx, ty] = polar((RPS_O + RPS_I) / 2, card.mid);
         return (
           <g key={card.id} style={{cursor:'pointer'}}
             onMouseEnter={() => onHover({...card, type:'court'})}
             onMouseLeave={() => onHover(null)}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'court'})}>
-            <path d={arc(RPS_I, RPS_O, card.a1, a2)}
+            <path d={arc(RPS_I, RPS_O, card.a1 - WEDGE_EPS, a2 + WEDGE_EPS)}
               fill={isHov ? `${sc}28` : `${sc}0d`}
-              stroke={isHov ? sc : `${sc}60`}
-              strokeWidth={isHov ? '0.9' : '0.5'}
-              strokeDasharray={isHov ? undefined : '2.5 2'}
+              stroke="none"
               filter={isHov ? 'url(#glow2)' : undefined}
               style={{transition:'all 0.2s'}}/>
             <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
@@ -1119,7 +1127,7 @@ function CourtRing({ active, onHover, onClick }) {
 }
 
 // ── ACE RING (90° QUADRANTS) ───────────────────────────
-const RA_O = 486, RA_I = 454;
+const RA_O = 244, RA_I = 200;
 
 function AceMarkers({ active, onHover, onClick }) {
   return (
@@ -1132,7 +1140,7 @@ function AceMarkers({ active, onHover, onClick }) {
         const [x, y] = polar((RA_O + RA_I) / 2, mid);
         const sc = SC[card.suit];
         const isHov = active?.id === card.id;
-        const rot = minorLikeTextRotation(mid);
+        const rot = radialOutwardTextRotation(mid);
         const elementSymbol = ELEMENT_SYMBOL[card.element] || '✦';
         return (
           <g key={card.id} style={{cursor:'pointer'}}
@@ -1140,11 +1148,9 @@ function AceMarkers({ active, onHover, onClick }) {
             onMouseLeave={() => onHover(null)}
             onClick={() => onClick(prev => prev?.id===card.id ? null : {...card, type:'ace'})}>
             <path
-              d={arc(RA_I, RA_O, quad.a1, a2)}
+              d={arc(RA_I, RA_O, quad.a1 - WEDGE_EPS, a2 + WEDGE_EPS)}
               fill={isHov ? `${sc}24` : `${sc}10`}
-              stroke={isHov ? sc : `${sc}70`}
-              strokeWidth={isHov ? '0.9' : '0.5'}
-              strokeDasharray={isHov ? undefined : '2.5 2'}
+              stroke="none"
               filter={isHov ? 'url(#glow2)' : undefined}
               style={{transition:'all 0.2s'}}
             />
@@ -1167,6 +1173,12 @@ function AceMarkers({ active, onHover, onClick }) {
             </g>
           </g>
         );
+      })}
+      {Array.from({length: 4}, (_, i) => {
+        const a = i * 90;
+        const [x1, y1] = polar(RA_I, a);
+        const [x2, y2] = polar(RA_O, a);
+        return <line key={`ace-sep-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(201,169,97,0.28)" strokeWidth="0.45"/>;
       })}
       <circle cx={CX} cy={CY} r={RA_O} fill="none" stroke="rgba(201,169,97,0.16)" strokeWidth="0.55"/>
       <circle cx={CX} cy={CY} r={RA_I} fill="none" stroke="rgba(201,169,97,0.10)" strokeWidth="0.4" strokeDasharray="2 3"/>
@@ -1493,6 +1505,7 @@ function App() {
   const [isWheelHiddenMobile, setIsWheelHiddenMobile] = useState(false);
   const [sheetState, setSheetState] = useState('closed'); // closed | peek | full
   const [zodiacRotation, setZodiacRotation] = useState(0);
+  const [aceRotation, setAceRotation] = useState(0);
   const [planetaryRotation, setPlanetaryRotation] = useState(0);
   const [sheetDragOffset, setSheetDragOffset] = useState(0);
   const sheetDragRef = useRef({ active: false, startY: 0, stateAtStart: 'closed' });
@@ -1655,11 +1668,13 @@ function App() {
           <circle cx={CX} cy={CY} r={240} fill="url(#cg)"/>
           <circle cx={CX} cy={CY} r={420} fill="url(#hg)"/>
           <g transform={`rotate(${zodiacRotation}, ${CX}, ${CY})`}>
-            {tweaks.showAces && <AceMarkers active={active} onHover={handleHover} onClick={handleClick}/>}
             {tweaks.showCourt && <CourtRing active={active} onHover={handleHover} onClick={handleClick}/>}
             <ZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>
             {tweaks.showDecans && <DecanRing active={active} onHover={handleHover} onClick={handleClick}/>}
             {tweaks.showZodiacMajor && <MajorZodiacRing active={active} onHover={handleHover} onClick={handleClick}/>}
+          </g>
+          <g transform={`rotate(${aceRotation}, ${CX}, ${CY})`}>
+            {tweaks.showAces && <AceMarkers active={active} onHover={handleHover} onClick={handleClick}/>}
           </g>
           <g transform={`rotate(${planetaryRotation}, ${CX}, ${CY})`}>
             {tweaks.showPlanetary && <Heptagram active={active} onHover={handleHover} onClick={handleClick}/>}
@@ -1681,6 +1696,18 @@ function App() {
             title="Rotate zodiac +10°"
           >Z↻</button>
           <button className="zoom-btn zoom-btn-reset" onClick={() => setZodiacRotation(0)} title="Reset zodiac rotation">Z⟲</button>
+          <div className="rotate-group-label">Aces</div>
+          <button
+            className="zoom-btn"
+            onClick={() => setAceRotation(r => r - 10)}
+            title="Rotate aces -10°"
+          >A↺</button>
+          <button
+            className="zoom-btn"
+            onClick={() => setAceRotation(r => r + 10)}
+            title="Rotate aces +10°"
+          >A↻</button>
+          <button className="zoom-btn zoom-btn-reset" onClick={() => setAceRotation(0)} title="Reset ace rotation">A⟲</button>
           <div className="rotate-group-label">Planet</div>
           <button
             className="zoom-btn"
