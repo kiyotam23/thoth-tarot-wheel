@@ -254,7 +254,6 @@ body {
 }
 .mobile-sheet-handle-wrap,
 .mobile-sheet-actions,
-.mobile-backdrop,
 .mobile-wheel-toggle {
   display: none;
 }
@@ -304,14 +303,6 @@ body {
     display: none !important;
     pointer-events: none;
   }
-  .mobile-backdrop {
-    display: block;
-    position: absolute;
-    inset: 0;
-    z-index: 4;
-    border: 0;
-    background: linear-gradient(to top, rgba(10,7,16,0.42), rgba(10,7,16,0));
-  }
   .panel {
     position: absolute;
     left: 0;
@@ -330,26 +321,23 @@ body {
     will-change: transform;
     display: flex;
     flex-direction: column;
-    padding: 14px 18px calc(22px + env(safe-area-inset-bottom));
+    padding: 8px 14px calc(16px + env(safe-area-inset-bottom));
     overflow-y: auto;
-    height: var(--sheet-height, 40dvh);
+    height: var(--sheet-height, 56dvh);
   }
   .panel.sheet-closed {
-    --sheet-height: 40dvh;
+    --sheet-height: 56dvh;
     --sheet-offset: calc(100% + 22px);
     pointer-events: none;
   }
   .panel.sheet-peek {
-    --sheet-height: 40dvh;
-  }
-  .panel.sheet-full {
-    --sheet-height: calc(100dvh - 8px);
+    --sheet-height: 56dvh;
   }
   .mobile-sheet-handle-wrap {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: -4px 0 10px;
+    margin: 0 0 6px;
     flex-shrink: 0;
     touch-action: none;
   }
@@ -375,6 +363,91 @@ body {
     text-transform: uppercase;
     padding: 5px 8px;
     border-radius: 999px;
+  }
+  .mobile-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .mobile-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+  .mobile-card-head .card-type-badge {
+    margin-top: 4px;
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+  .mobile-card-thumb {
+    margin-left: auto;
+    width: 96px;
+    height: 144px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(201,169,97,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .mobile-card-thumb-fallback {
+    font-size: 40px;
+    opacity: 0.7;
+  }
+  .panel .card-number-name {
+    padding-bottom: 10px;
+    margin-bottom: 2px;
+  }
+  .mobile-card-meta .card-number-name {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+  .mobile-secondary-title {
+    font-size: 18px;
+    line-height: 1.1;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--gold);
+    opacity: 0.9;
+    margin-top: -2px;
+  }
+  .panel .card-roman {
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+  .panel .card-name {
+    font-size: 30px;
+    line-height: 1.04;
+  }
+  .panel .detail-grid {
+    gap: 8px 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .panel .detail-label {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+  .panel .detail-value {
+    font-size: 18px;
+    line-height: 1.16;
+  }
+  .panel .hebrew-block {
+    padding: 10px;
+    gap: 4px;
+  }
+  .panel .hebrew-glyph {
+    font-size: 30px;
   }
   .panel-logo {
     display: flex;
@@ -1289,7 +1362,7 @@ function CardImage({ card, fallbackGlyph, fallbackColor }) {
   );
 }
 
-function InfoPanel({ card, className = '', style, headerSlot = null }) {
+function InfoPanel({ card, className = '', style, headerSlot = null, isMobileView = false }) {
   if (!card) return (
     <div className={`panel ${className}`.trim()} style={style}>
       {headerSlot}
@@ -1337,27 +1410,52 @@ function InfoPanel({ card, className = '', style, headerSlot = null }) {
     :
     card.type === 'court' ? card.rank :
     (card.roman || card.num);
+  const thumbSrc = getCardImageSrc(card);
 
   return (
     <div className={`panel ${className}`.trim()} style={style}>
       {headerSlot}
 
-      {/* Type badge */}
-      <div><span className="card-type-badge" style={{color: typeColor, borderColor: `${typeColor}60`}}>{typeLabel}</span></div>
-
-      {/* Card image (actual file if available, fallback to glyph) */}
-      <CardImage card={card} fallbackGlyph={glyph} fallbackColor={typeColor}/>
+      {isMobileView ? (
+        <div className="mobile-card-head">
+          <div className="mobile-card-meta">
+            <span className="card-type-badge" style={{color: typeColor, borderColor: `${typeColor}60`}}>{typeLabel}</span>
+            <div className="card-number-name">
+              {displayCardIndex ? <div className="card-roman">{displayCardIndex}</div> : null}
+              <div className="card-name" style={{color: typeColor}}>{displayCardName}</div>
+            </div>
+            {card.type === 'minor' && (
+              <div className="mobile-secondary-title">{card.name}</div>
+            )}
+          </div>
+          <div className="mobile-card-thumb">
+            {thumbSrc ? (
+              <img src={thumbSrc} alt={card?.name || 'card'} />
+            ) : (
+              <div className="mobile-card-thumb-fallback" style={{color: typeColor}}>{glyph}</div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Type badge */}
+          <div><span className="card-type-badge" style={{color: typeColor, borderColor: `${typeColor}60`}}>{typeLabel}</span></div>
+          {/* Card image (actual file if available, fallback to glyph) */}
+          <CardImage card={card} fallbackGlyph={glyph} fallbackColor={typeColor}/>
+        </>
+      )}
 
       {/* Number and name */}
-      <div className="card-number-name">
-        {displayCardIndex ? <div className="card-roman">{displayCardIndex}</div> : null}
-        <div className="card-name" style={{color: typeColor}}>{displayCardName}</div>
-      </div>
+      {!isMobileView && (
+        <div className="card-number-name">
+          {displayCardIndex ? <div className="card-roman">{displayCardIndex}</div> : null}
+          <div className="card-name" style={{color: typeColor}}>{displayCardName}</div>
+        </div>
+      )}
 
       {/* Details grid */}
       {card.type === 'minor' && (
         <div className="detail-grid">
-          <DetailRow label="Thoth Title" value={card.name} wide/>
           <DetailRow label="Suit" value={card.suit}/>
           <DetailRow label="Number" value={card.num} mono/>
           <DetailRow label="Sign" value={SIGNS[card.sign].name}/>
@@ -1503,7 +1601,7 @@ function App() {
   const [tweaksVisible, setTweaksVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 820px)').matches);
   const [isWheelHiddenMobile, setIsWheelHiddenMobile] = useState(false);
-  const [sheetState, setSheetState] = useState('closed'); // closed | peek | full
+  const [sheetState, setSheetState] = useState('closed'); // closed | peek
   const [zodiacRotation, setZodiacRotation] = useState(0);
   const [aceRotation, setAceRotation] = useState(0);
   const [planetaryRotation, setPlanetaryRotation] = useState(0);
@@ -1518,12 +1616,6 @@ function App() {
     setSheetState('closed');
     setSheetDragOffset(0);
   };
-  const expandSheet = () => {
-    if (!selected) return;
-    setSheetState('full');
-    setSheetDragOffset(0);
-  };
-
 
   // Register tweaks with host
   useEffect(() => {
@@ -1574,8 +1666,7 @@ function App() {
     if (!isMobile) return;
     const onEsc = (e) => {
       if (e.key !== 'Escape') return;
-      if (sheetState === 'full') setSheetState('peek');
-      else if (sheetState === 'peek') closeSheet();
+      if (sheetState === 'peek') closeSheet();
     };
     window.addEventListener('keydown', onEsc);
     return () => window.removeEventListener('keydown', onEsc);
@@ -1610,13 +1701,10 @@ function App() {
     if (!sheetDragRef.current.active) return;
     const deltaY = e.touches[0].clientY - sheetDragRef.current.startY;
     const isDraggingDown = deltaY > 0;
-    const isDraggingUp = deltaY < 0;
-    const canDrag =
-      (sheetDragRef.current.stateAtStart === 'full' && isDraggingDown) ||
-      (sheetDragRef.current.stateAtStart === 'peek' && (isDraggingDown || isDraggingUp));
+    const canDrag = (sheetDragRef.current.stateAtStart === 'peek' && isDraggingDown);
     if (!canDrag) return;
     e.preventDefault();
-    const limited = Math.max(-180, Math.min(260, deltaY));
+    const limited = Math.max(0, Math.min(260, deltaY));
     setSheetDragOffset(limited);
   };
 
@@ -1626,18 +1714,13 @@ function App() {
     const deltaY = sheetDragOffset;
     sheetDragRef.current.active = false;
     setSheetDragOffset(0);
-    if (stateAtStart === 'full') {
-      if (deltaY > 120) setSheetState('peek');
-      return;
-    }
     if (stateAtStart === 'peek') {
       if (deltaY > 140) closeSheet();
-      else if (deltaY < -90) setSheetState('full');
     }
   };
 
   const mobileSheetClass = isMobile
-    ? (sheetState === 'full' ? 'sheet-full' : sheetState === 'peek' ? 'sheet-peek' : 'sheet-closed')
+    ? (sheetState === 'peek' ? 'sheet-peek' : 'sheet-closed')
     : '';
   const panelStyle = isMobile && sheetState !== 'closed'
     ? { transform: `translateY(${Math.max(0, sheetDragOffset)}px)` }
@@ -1722,18 +1805,12 @@ function App() {
           <button className="zoom-btn zoom-btn-reset" onClick={() => setPlanetaryRotation(0)} title="Reset planetary rotation">P⟲</button>
         </div>
       </div>
-      {isMobile && sheetState === 'full' && (
-        <button
-          className="mobile-backdrop"
-          aria-label="Close card details"
-          onClick={closeSheet}
-        />
-      )}
       {isMobile && (
         <InfoPanel
           card={active}
           className={mobileSheetClass}
           style={panelStyle}
+          isMobileView
           headerSlot={(
             <div
               className="mobile-sheet-handle-wrap"
@@ -1742,14 +1819,6 @@ function App() {
               onTouchEnd={handleSheetTouchEnd}
             >
               <div className="mobile-sheet-handle" />
-              <div className="mobile-sheet-actions">
-                {sheetState === 'peek' && selected && (
-                  <button className="mobile-sheet-btn" onClick={expandSheet}>Full</button>
-                )}
-                {sheetState === 'full' && selected && (
-                  <button className="mobile-sheet-btn" onClick={closeSheet}>Close</button>
-                )}
-              </div>
             </div>
           )}
         />
